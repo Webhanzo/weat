@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "pizza-place",
+      "imageUrl": "https://images.unsplash.com/photo-1600628421066-f6bda6a7b976?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwaXp6YSUyMHJlc3RhdXJhbnR8ZW58MHx8fHwxNzYyMTg5NjEyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pizza restaurant"
+    },
+    {
+      "id": "sushi-den",
+      "imageUrl": "https://images.unsplash.com/photo-1634714434441-078536768250?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzdXNoaSUyMHJlc3RhdXJhbnR8ZW58MHx8fHwxNzYyMTExNTk2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sushi restaurant"
+    },
+    {
+      "id": "burger-joint",
+      "imageUrl": "https://images.unsplash.com/photo-1665991946306-3ca545298331?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXJnZXIlMjBzaG9wfGVufDB8fHx8MTc2MjIxNjk4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "burger shop"
+    },
+    {
+      "id": "taco-fiesta",
+      "imageUrl": "https://images.unsplash.com/photo-1722903836506-32a082faf41c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0YWNvJTIwc3RhbmR8ZW58MHx8fHwxNzYyMjE2OTg0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "taco stand"
+    },
+    {
+      "id": "salad-spot",
+      "imageUrl": "https://images.unsplash.com/photo-1540420773420-3366772f4999?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzYWxhZCUyMGJhcnxlbnwwfHx8fDE3NjIxNTcyOTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "salad bar"
+    },
+    {
+      "id": "pasta-paradise",
+      "imageUrl": "https://images.unsplash.com/photo-1722722126433-a168fa40b40e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwYXN0YSUyMHJlc3RhdXJhbnR8ZW58MHx8fHwxNzYyMjE2OTg0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pasta restaurant"
+    }
+  ]
 }
