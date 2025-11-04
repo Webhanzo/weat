@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: 'play-lh.googleusercontent.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'tse3.mm.bing.net',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
