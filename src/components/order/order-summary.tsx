@@ -3,8 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GroupOrder } from "@/lib/types";
-import { Users, Truck, Wallet } from "lucide-react";
-import { Button } from "../ui/button";
+import { Users, Truck, Wallet, Info } from "lucide-react";
 import Image from "next/image";
 
 type OrderSummaryProps = {
@@ -79,10 +78,10 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
             <span>Grand Total</span>
             <span>${grandTotal.toFixed(2)}</span>
         </div>
-        <Button className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white gap-2">
-            <Image src="https://play-lh.googleusercontent.com/4JaeG-34wK8R2LhHjB-o-k8KjH-3iQAU9YhT-g-q-m_A-a-Gz-6Y_sA-udC10t3sXw=w240-h480-rw" alt="CliQ Logo" width={24} height={24} />
-            Pay with CliQ
-        </Button>
+        <div className="flex items-start text-sm text-muted-foreground bg-blue-500/10 p-3 rounded-md border border-blue-500/20 w-full">
+            <Info className="h-4 w-4 mr-2 mt-0.5 text-blue-500" />
+            <p>يمكن تسوية الدفع بين المشاركين خارج التطبيق.</p>
+        </div>
       </CardFooter>
     </Card>
   );
