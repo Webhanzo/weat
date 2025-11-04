@@ -1,4 +1,3 @@
-'use client';
 import { getDatabase, ref, get, set, child } from "firebase/database";
 import type { Restaurant, GroupOrder } from './types';
 import { initializeFirebase } from "@/firebase";
@@ -79,7 +78,7 @@ const restaurantsData: Omit<Restaurant, 'id'>[] = [
       deliveryFee: 3.00,
       menu: [
         { id: '8-1', name: 'Shawerma', description: 'Golden shawerma sandwich', price: 4.00 },
-        { id: '8-2', name 'Broasted', description: 'Golden broasted chicken', price: 6.50 },
+        { id: '8-2', name: 'Broasted', description: 'Golden broasted chicken', price: 6.50 },
       ],
     },
     {
@@ -466,7 +465,9 @@ export async function getRestaurants(): Promise<Restaurant[]> {
     const dbRef = ref(getDatabase());
     const snapshot = await get(child(dbRef, 'restaurants'));
     if (snapshot.exists()) {
-        return snapshot.val();
+        const val = snapshot.val();
+        // Firebase returns an array-like object, convert it to a real array, filtering out nulls if any
+        return Object.values(val || {}).filter(r => r) as Restaurant[];
     } else {
         return [];
     }
