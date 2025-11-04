@@ -71,7 +71,7 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
                 <SelectValue placeholder="Select a dish to add" />
               </SelectTrigger>
               <SelectContent>
-                {order.restaurant.menu.map(dish => (
+                {order.restaurant.menu && order.restaurant.menu.map(dish => (
                   <SelectItem key={dish.id} value={dish.id}>
                     {dish.name} - ${dish.price.toFixed(2)}
                   </SelectItem>
