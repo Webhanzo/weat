@@ -1,4 +1,4 @@
-import { UtensilsCrossed } from 'lucide-react';
+import { UtensilsCrossed, History } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 
@@ -19,6 +19,9 @@ export default function Header() {
                 </Button>
                 <Button asChild variant="ghost">
                     <Link href="/orders/create">Orders</Link>
+                </Button>
+                <Button asChild variant="ghost">
+                    <Link href="/orders/history">History</Link>
                 </Button>
                 <Button asChild variant="ghost">
                     <Link href="/suggestions">Suggestions</Link>

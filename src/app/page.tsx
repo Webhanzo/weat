@@ -6,7 +6,8 @@ import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
 
 export default async function Home() {
-  const activeOrders = await getGroupOrders();
+  const allOrders = await getGroupOrders();
+  const activeOrders = allOrders.filter(order => order.status === 'active');
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -11,19 +11,24 @@ export async function createOrder(formData: FormData) {
     return { error: "Restaurant ID is required." };
   }
 
-  const restaurant = await getRestaurantById(restaurantId);
-  if (!restaurant) {
-    return { error: "Restaurant not found." };
+  let newOrderId;
+  try {
+    const restaurant = await getRestaurantById(restaurantId);
+    if (!restaurant) {
+      return { error: "Restaurant not found." };
+    }
+
+    const newOrder: Omit<GroupOrder, 'id'> = {
+      restaurant,
+      participants: [],
+      createdAt: new Date().toISOString(),
+      status: "active",
+    };
+
+    newOrderId = await addGroupOrder(newOrder);
+  } catch (error: any) {
+    return { message: `Failed to create order: ${error.message}`, type: 'error' };
   }
-
-  const newOrder: Omit<GroupOrder, 'id'> = {
-    restaurant,
-    participants: [],
-    createdAt: new Date().toISOString(),
-    status: "active",
-  };
-
-  const newOrderId = await addGroupOrder(newOrder);
   
   redirect(`/orders/${newOrderId}`);
 }
@@ -41,6 +46,10 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
     const order = await getGroupOrderById(orderId);
     if (!order) {
         return { message: "Order not found.", type: "error" };
+    }
+
+    if (order.status !== 'active') {
+        return { message: "This order is finalized and can no longer be modified.", type: "error"};
     }
 
     const dish = order.restaurant.menu?.find(d => d.id === dishId);
@@ -203,4 +212,27 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     revalidatePath(`/orders/create`);
     revalidatePath(`/`);
     redirect('/orders/create');
+}
+
+
+export async function finalizeOrder(formData: FormData) {
+  const orderId = formData.get("orderId") as string;
+  if (!orderId) {
+    // This should ideally return a state for the form
+    throw new Error("Order ID is required.");
+  }
+
+  const order = await getGroupOrderById(orderId);
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+  
+  order.status = 'finalized';
+
+  await updateGroupOrder(order.id, order);
+  
+  revalidatePath(`/orders/${orderId}`);
+  revalidatePath('/orders/history');
+  revalidatePath('/');
+  redirect(`/orders/history`);
 }

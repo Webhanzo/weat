@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import AddToOrderForm from "@/components/order/add-to-order-form";
 import OrderSummary from "@/components/order/order-summary";
 import { Button } from "@/components/ui/button";
-import { Utensils, User, Clock, Pencil } from "lucide-react";
+import { Utensils, User, Clock, Pencil, CheckCircle, Info } from "lucide-react";
 import { format } from 'date-fns';
+import FinalizeOrderButton from "@/components/order/finalize-order-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -17,6 +19,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
 
   const participants = order.participants || [];
   const totalItems = participants.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0);
+  const isFinalized = order.status === 'finalized';
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -77,11 +80,34 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
             </CardContent>
           </Card>
           
-          <AddToOrderForm order={order} />
+          {isFinalized ? (
+            <Alert variant="default" className="border-green-500 bg-green-500/10">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertTitle className="text-green-600 dark:text-green-400">Order Finalized</AlertTitle>
+              <AlertDescription>
+                This order is complete and can no longer be modified.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <AddToOrderForm order={order} />
+          )}
 
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
           <OrderSummary order={order} />
+          {!isFinalized && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Finalize Order</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Once finalized, no more items can be added to this order. It will be moved to your order history.
+                </p>
+                <FinalizeOrderButton orderId={order.id} />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
