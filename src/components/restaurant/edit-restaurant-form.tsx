@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { updateRestaurant } from "@/lib/actions";
 import type { Dish, Restaurant } from "@/lib/types";
@@ -23,6 +24,7 @@ type EditRestaurantFormProps = {
 };
 
 export default function EditRestaurantForm({ restaurant }: EditRestaurantFormProps) {
+  const router = useRouter();
   const [state, formAction] = useActionState(updateRestaurant, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -31,7 +33,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
 
   useEffect(() => {
-    if (state.message) {
+    if (state?.message) {
       if (state.type === 'success') {
         toast({
           title: "Success!",
@@ -45,7 +47,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
         });
       }
     }
-  }, [state, toast]);
+  }, [state, toast, router]);
 
   const handleAddMenuItem = () => {
     if (currentMenuItem.name && currentMenuItem.price) {
@@ -106,7 +108,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
                 {menuItems.map((item) => (
                   <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
                     <div>
-                      <p className="font-semibold">{item.name} - ${item.price}</p>
+                      <p className="font-semibold">{item.name} - ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
                     <Button variant="ghost" size="icon" type="button" onClick={() => handleRemoveMenuItem(item.id!)}>

@@ -120,10 +120,10 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     };
 
     try {
-        const newId = await addRestaurantToDb(newRestaurant);
+        await addRestaurantToDb(newRestaurant);
         revalidatePath('/orders/create');
         revalidatePath('/restaurants/add');
-        return { message: `Restaurant "${name}" added successfully with ID ${newId}.`, type: 'success' };
+        redirect('/orders/create');
     } catch (e: any) {
         return { message: `Failed to add restaurant: ${e.message}`, type: 'error' };
     }
@@ -172,7 +172,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
         revalidatePath(`/restaurants/${id}/edit`);
         revalidatePath(`/orders/create`);
         revalidatePath(`/`);
-        return { message: `Restaurant "${name}" updated successfully.`, type: 'success' };
+        redirect(`/orders/${id}`);
     } catch (e: any) {
         return { message: `Failed to update restaurant: ${e.message}`, type: 'error' };
     }

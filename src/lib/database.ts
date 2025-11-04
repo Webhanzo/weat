@@ -472,7 +472,7 @@ export async function addRestaurant(restaurant: Omit<Restaurant, 'id'>): Promise
     if (!newId) {
         throw new Error("Failed to generate a new ID for the restaurant.");
     }
-    await set(newRestaurantRef, {...restaurant, id: newId});
+    await set(newRestaurantRef, restaurant);
     return newId;
 }
 
@@ -525,9 +525,14 @@ export async function getGroupOrderById(id: string): Promise<GroupOrder | undefi
 
 export async function addGroupOrder(order: Omit<GroupOrder, 'id'>): Promise<string> {
     const db = getDatabase();
-    const newOrderId = `ord-${Date.now()}`;
-    await set(ref(db, `groupOrders/${newOrderId}`), order);
-    return newOrderId;
+    const groupOrdersRef = ref(db, 'groupOrders');
+    const newOrderRef = push(groupOrdersRef);
+    const newId = newOrderRef.key;
+    if (!newId) {
+        throw new Error("Failed to generate a new ID for the order.");
+    }
+    await set(newOrderRef, order);
+    return newId;
 }
 
 export async function updateGroupOrder(orderId: string, updatedOrder: GroupOrder): Promise<void> {

@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const initialState = {
   message: "",
@@ -19,6 +20,7 @@ const initialState = {
 };
 
 export default function AddRestaurantForm() {
+  const router = useRouter();
   const [state, formAction] = useActionState(addRestaurant, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -27,15 +29,8 @@ export default function AddRestaurantForm() {
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
 
   useEffect(() => {
-    if (state.message) {
-      if (state.type === 'success') {
-        toast({
-          title: "Success!",
-          description: state.message,
-        });
-        formRef.current?.reset();
-        setMenuItems([]);
-      } else {
+    if (state?.message) {
+      if (state.type === 'error') {
         toast({
           title: "Error",
           description: state.message,
@@ -43,7 +38,7 @@ export default function AddRestaurantForm() {
         });
       }
     }
-  }, [state, toast]);
+  }, [state, toast, router]);
 
   const handleAddMenuItem = () => {
     if (currentMenuItem.name && currentMenuItem.price) {
