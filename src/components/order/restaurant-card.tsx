@@ -34,7 +34,7 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
             </div>
              <div className="flex items-center">
                 <Utensils className="h-4 w-4 mr-1.5" />
-                {restaurant.menu.length} menu items
+                {restaurant.menu?.length || 0} menu items
             </div>
         </div>
       </CardContent>
