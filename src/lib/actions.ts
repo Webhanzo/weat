@@ -121,12 +121,13 @@ export async function addRestaurant(prevState: any, formData: FormData) {
 
     try {
         await addRestaurantToDb(newRestaurant);
-        revalidatePath('/orders/create');
-        revalidatePath('/restaurants/add');
-        redirect('/orders/create');
     } catch (e: any) {
         return { message: `Failed to add restaurant: ${e.message}`, type: 'error' };
     }
+
+    revalidatePath('/orders/create');
+    revalidatePath('/restaurants/add');
+    redirect('/orders/create');
 }
 
 export async function updateRestaurant(prevState: any, formData: FormData) {
@@ -169,11 +170,12 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
 
     try {
         await updateRestaurantInDb(id, restaurantToUpdate);
-        revalidatePath(`/restaurants/${id}/edit`);
-        revalidatePath(`/orders/create`);
-        revalidatePath(`/`);
-        redirect(`/orders/create`);
     } catch (e: any) {
         return { message: `Failed to update restaurant: ${e.message}`, type: 'error' };
     }
+    
+    revalidatePath(`/restaurants/${id}/edit`);
+    revalidatePath(`/orders/create`);
+    revalidatePath(`/`);
+    redirect(`/orders/create`);
 }
