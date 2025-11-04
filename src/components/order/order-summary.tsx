@@ -86,10 +86,6 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
             <span>Grand Total</span>
             <span>${grandTotal.toFixed(2)}</span>
         </div>
-        <div className="flex items-start text-sm text-muted-foreground bg-blue-500/10 p-3 rounded-md border border-blue-500/20 w-full">
-            <Info className="h-4 w-4 mr-2 mt-0.5 text-blue-500" />
-            <p>يمكن تسوية الدفع بين المشاركين باستخدام معرّفات Cliq الخاصة بهم.</p>
-        </div>
       </CardFooter>
     </Card>
   );
