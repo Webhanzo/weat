@@ -1,8 +1,21 @@
 import { getRestaurants } from "@/lib/database";
 import RestaurantCard from "@/components/order/restaurant-card";
+import type { Restaurant } from "@/lib/types";
 
 export default async function CreateOrderPage() {
   const restaurants = await getRestaurants();
+
+  const groupedRestaurants = restaurants.reduce((acc, restaurant) => {
+    const category = restaurant.category || "Uncategorized";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(restaurant);
+    return acc;
+  }, {} as Record<string, Restaurant[]>);
+
+  const categories = Object.keys(groupedRestaurants).sort();
+
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -10,9 +23,19 @@ export default async function CreateOrderPage() {
         <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Start a New Order</h1>
         <p className="text-lg md:text-xl text-muted-foreground mt-2">Choose a restaurant to get started.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {restaurants.map(restaurant => (
-          <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+
+      <div className="space-y-12">
+        {categories.map(category => (
+          <div key={category}>
+            <h2 className="text-3xl font-bold font-headline text-accent mb-6 border-b-2 border-accent pb-2">
+              {category}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {groupedRestaurants[category].map(restaurant => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>

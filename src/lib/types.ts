@@ -12,6 +12,7 @@ export type Restaurant = {
   image: string;
   deliveryFee: number;
   menu: Dish[];
+  category: string;
 };
 
 export type OrderItem = {
@@ -20,7 +21,7 @@ export type OrderItem = {
 };
 
 export type Participant = {
-  id: string;
+  id:string;
   name: string;
   items: OrderItem[];
 };

@@ -12,12 +12,28 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save } from "lucide-react";
+import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const initialState = {
   message: "",
   type: "",
 };
+
+const categories = [
+  "Shawerma",
+  "Broasted",
+  "Snacks",
+  "Zinger",
+  "Wings",
+  "Calazone",
+  "Grill",
+  "Burger",
+  "Pizza",
+  "Sweets",
+  "Mansaf",
+  "Sea food",
+];
 
 type EditRestaurantFormProps = {
   restaurant: Restaurant;
@@ -97,6 +113,22 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
               <Label htmlFor="deliveryFee" className="flex items-center"><DollarSign className="h-4 w-4 mr-2" />Delivery Fee</Label>
               <Input id="deliveryFee" name="deliveryFee" type="number" step="0.01" defaultValue={restaurant.deliveryFee} required />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
+            <Select name="category" defaultValue={restaurant.category} required>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <input type="hidden" name="menu" value={JSON.stringify(menuItems)} />

@@ -11,13 +11,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils } from "lucide-react";
+import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils, Tag } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const initialState = {
   message: "",
   type: "",
 };
+
+const categories = [
+  "Shawerma",
+  "Broasted",
+  "Snacks",
+  "Zinger",
+  "Wings",
+  "Calazone",
+  "Grill",
+  "Burger",
+  "Pizza",
+  "Sweets",
+  "Mansaf",
+  "Sea food",
+];
 
 export default function AddRestaurantForm() {
   const router = useRouter();
@@ -29,16 +45,14 @@ export default function AddRestaurantForm() {
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
 
   useEffect(() => {
-    if (state?.message) {
-      if (state.type === 'error') {
-        toast({
-          title: "Error",
-          description: state.message,
-          variant: "destructive",
-        });
-      }
+    if (state?.message && state.type === 'error') {
+      toast({
+        title: "Error",
+        description: state.message,
+        variant: "destructive",
+      });
     }
-  }, [state, toast, router]);
+  }, [state, toast]);
 
   const handleAddMenuItem = () => {
     if (currentMenuItem.name && currentMenuItem.price) {
@@ -89,6 +103,22 @@ export default function AddRestaurantForm() {
               <Input id="deliveryFee" name="deliveryFee" type="number" step="0.01" placeholder="e.g., 5.00" required />
             </div>
            </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
+            <Select name="category" required>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Hidden input to pass menu items to server action */}
           <input type="hidden" name="menu" value={JSON.stringify(menuItems)} />

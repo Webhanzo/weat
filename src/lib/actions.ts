@@ -25,7 +25,6 @@ export async function createOrder(formData: FormData) {
 
   const newOrderId = await addGroupOrder(newOrder);
   
-  revalidatePath("/");
   redirect(`/orders/${newOrderId}`);
 }
 
@@ -88,9 +87,10 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
     const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
+    const category = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
-    if (!name || !description || !image || isNaN(deliveryFee)) {
+    if (!name || !description || !image || isNaN(deliveryFee) || !category) {
         return { message: "Please fill all required fields for the restaurant.", type: 'error' };
     }
 
@@ -116,6 +116,7 @@ export async function addRestaurant(prevState: any, formData: FormData) {
         description,
         image,
         deliveryFee,
+        category,
         menu,
     };
 
@@ -136,9 +137,10 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
     const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
+    const category = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
-    if (!id || !name || !description || !image || isNaN(deliveryFee)) {
+    if (!id || !name || !description || !image || isNaN(deliveryFee) || !category) {
         return { message: "Please fill all required fields.", type: 'error' };
     }
 
@@ -165,6 +167,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
         description,
         image,
         deliveryFee,
+        category,
         menu,
     };
 
@@ -177,5 +180,5 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     revalidatePath(`/restaurants/${id}/edit`);
     revalidatePath(`/orders/create`);
     revalidatePath(`/`);
-    redirect(`/orders/create`);
+    redirect('/orders/create');
 }
