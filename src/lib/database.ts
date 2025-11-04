@@ -61,7 +61,12 @@ export async function getRestaurantById(id: string): Promise<Restaurant | undefi
     const dbRef = ref(getDb(), `restaurants/${id}`);
     const snapshot = await get(dbRef);
     if (snapshot.exists()) {
-        return { id, ...snapshot.val() };
+        const val = snapshot.val();
+        return {
+            id,
+            ...val,
+            menu: val.menu || []
+        };
     }
     return undefined;
 }
@@ -94,7 +99,12 @@ export async function getGroupOrderById(id: string): Promise<GroupOrder | undefi
     const dbRef = ref(getDb(), `groupOrders/${id}`);
     const snapshot = await get(dbRef);
     if (snapshot.exists()) {
-        return { id, ...snapshot.val() };
+        const val = snapshot.val();
+        // Ensure the restaurant object within the order always has a menu array.
+        if (val.restaurant) {
+            val.restaurant.menu = val.restaurant.menu || [];
+        }
+        return { id, ...val };
     } else {
         return undefined;
     }
