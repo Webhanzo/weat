@@ -1,8 +1,8 @@
-"use server";
+'use server';
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb } from "./database";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb } from "./database";
 import type { GroupOrder, Participant, Restaurant, Dish } from "./types";
 
 export async function createOrder(formData: FormData) {
@@ -27,10 +27,8 @@ export async function createOrder(formData: FormData) {
 
     newOrderId = await addGroupOrder(newOrder);
   } catch (error: any) {
-    return { message: `Failed to create order: ${error.message}`, type: 'error' };
+    redirect(`/orders/${newOrderId}`);
   }
-  
-  redirect(`/orders/${newOrderId}`);
 }
 
 export async function addItemToOrder(prevState: any, formData: FormData) {
@@ -235,4 +233,27 @@ export async function finalizeOrder(formData: FormData) {
   revalidatePath('/orders/history');
   revalidatePath('/');
   redirect(`/orders/history`);
+}
+
+export async function deleteRestaurant(formData: FormData) {
+    const id = formData.get('id') as string;
+    if (!id) {
+        // In a real app, you'd want better error handling here.
+        // For now, we just won't do anything if there's no ID.
+        return;
+    }
+
+    try {
+        await deleteRestaurantFromDb(id);
+    } catch (error) {
+        // Handle potential errors during deletion, e.g., logging
+        console.error("Failed to delete restaurant:", error);
+        // Optionally, return an error state to the UI
+        return; 
+    }
+
+    revalidatePath('/orders/create');
+    revalidatePath('/restaurants/add');
+    revalidatePath('/');
+    redirect('/orders/create');
 }

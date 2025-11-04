@@ -148,3 +148,12 @@ export async function updateRestaurant(restaurantId: string, updatedRestaurant: 
     const { id, ...restaurantData } = updatedRestaurant;
     await set(ref(db, `restaurants/${restaurantId}`), restaurantData);
 }
+
+/**
+ * Deletes a restaurant from the database.
+ * @param restaurantId The ID of the restaurant to delete.
+ */
+export async function deleteRestaurant(restaurantId: string): Promise<void> {
+    const db = getDb();
+    await set(ref(db, `restaurants/${restaurantId}`), null);
+}

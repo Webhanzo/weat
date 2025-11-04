@@ -14,6 +14,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import DeleteRestaurantButton from "./delete-restaurant-button";
 
 const initialState = {
   message: "",
@@ -186,11 +187,13 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
               Add Menu Item
             </Button>
           </div>
-
-          <SubmitButton className="w-full font-bold">
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </SubmitButton>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <SubmitButton className="w-full font-bold">
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </SubmitButton>
+            <DeleteRestaurantButton restaurantId={restaurant.id} />
+          </div>
         </form>
       </CardContent>
     </Card>
