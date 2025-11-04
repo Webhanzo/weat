@@ -1,19 +1,20 @@
 import { notFound } from "next/navigation";
-import { getGroupOrderById } from "@/lib/data";
+import { getGroupOrderById } from "@/lib/database";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import AddToOrderForm from "@/components/order/add-to-order-form";
 import OrderSummary from "@/components/order/order-summary";
 import { Utensils, User, Clock } from "lucide-react";
 import { format } from 'date-fns';
 
-export default function OrderPage({ params }: { params: { id: string } }) {
-  const order = getGroupOrderById(params.id);
+export default async function OrderPage({ params }: { params: { id: string } }) {
+  const order = await getGroupOrderById(params.id);
 
   if (!order) {
     notFound();
   }
 
-  const totalItems = order.participants.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0);
+  const participants = order.participants || [];
+  const totalItems = participants.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -31,7 +32,7 @@ export default function OrderPage({ params }: { params: { id: string } }) {
                 <div className="grid grid-cols-2 gap-4 text-muted-foreground mb-6">
                     <div className="flex items-center">
                         <User className="h-5 w-5 mr-3 text-primary"/>
-                        <span className="font-semibold">{order.participants.length} Participants</span>
+                        <span className="font-semibold">{participants.length} Participants</span>
                     </div>
                     <div className="flex items-center">
                         <Utensils className="h-5 w-5 mr-3 text-primary"/>
@@ -40,9 +41,9 @@ export default function OrderPage({ params }: { params: { id: string } }) {
                 </div>
 
               <h3 className="font-headline text-2xl mb-4 border-b pb-2">Who's Ordered What?</h3>
-              {order.participants.length > 0 ? (
+              {participants.length > 0 ? (
                 <ul className="space-y-4">
-                  {order.participants.map(participant => (
+                  {participants.map(participant => (
                     <li key={participant.id} className="p-4 bg-background rounded-lg border">
                       <p className="font-bold text-lg text-primary">{participant.name}</p>
                       <ul className="mt-2 space-y-1 text-sm pl-4 list-disc list-inside">

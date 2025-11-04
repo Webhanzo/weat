@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { getGroupOrders } from "@/lib/data";
+import { getGroupOrders } from "@/lib/database";
 import { PlusCircle, Lightbulb, ArrowRight, Users, Utensils, Clock } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
 
-export default function Home() {
-  const activeOrders = getGroupOrders();
+export default async function Home() {
+  const activeOrders = await getGroupOrders();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -67,11 +67,11 @@ export default function Home() {
                     <CardContent className="flex-grow">
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        <span>{order.participants.length} participant{order.participants.length === 1 ? '' : 's'}</span>
+                        <span>{order.participants?.length || 0} participant{(order.participants?.length || 0) === 1 ? '' : 's'}</span>
                       </div>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-2">
                         <Utensils className="h-4 w-4" />
-                         <span>{order.participants.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0)} items ordered</span>
+                         <span>{order.participants?.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0) || 0} items ordered</span>
                       </div>
                     </CardContent>
                     <CardFooter>

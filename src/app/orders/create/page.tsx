@@ -1,8 +1,8 @@
-import { getRestaurants } from "@/lib/data";
+import { getRestaurants } from "@/lib/database";
 import RestaurantCard from "@/components/order/restaurant-card";
 
-export default function CreateOrderPage() {
-  const restaurants = getRestaurants();
+export default async function CreateOrderPage() {
+  const restaurants = await getRestaurants();
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">

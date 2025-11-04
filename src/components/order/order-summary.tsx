@@ -10,7 +10,7 @@ type OrderSummaryProps = {
 };
 
 export default function OrderSummary({ order }: OrderSummaryProps) {
-  const participants = order.participants;
+  const participants = order.participants || [];
   const deliveryFee = order.restaurant.deliveryFee;
   const participantCount = participants.length > 0 ? participants.length : 1;
   const deliveryFeePerPerson = deliveryFee / participantCount;

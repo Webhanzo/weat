@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder } from "./data";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder } from "./database";
 import type { GroupOrder, Participant } from "./types";
 
 export async function createOrder(formData: FormData) {
@@ -11,23 +11,22 @@ export async function createOrder(formData: FormData) {
     return { error: "Restaurant ID is required." };
   }
 
-  const restaurant = getRestaurantById(restaurantId);
+  const restaurant = await getRestaurantById(restaurantId);
   if (!restaurant) {
     return { error: "Restaurant not found." };
   }
 
-  const newOrder: GroupOrder = {
-    id: `ord-${Date.now()}`,
+  const newOrder: Omit<GroupOrder, 'id'> = {
     restaurant,
     participants: [],
     createdAt: new Date().toISOString(),
     status: "active",
   };
 
-  addGroupOrder(newOrder);
+  const newOrderId = await addGroupOrder(newOrder);
   
   revalidatePath("/");
-  redirect(`/orders/${newOrder.id}`);
+  redirect(`/orders/${newOrderId}`);
 }
 
 export async function addItemToOrder(prevState: any, formData: FormData) {
@@ -40,7 +39,7 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         return { message: "Missing required fields.", type: "error" };
     }
 
-    const order = getGroupOrderById(orderId);
+    const order = await getGroupOrderById(orderId);
     if (!order) {
         return { message: "Order not found.", type: "error" };
     }
@@ -50,7 +49,8 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         return { message: "Dish not found.", type: "error" };
     }
 
-    let participant = order.participants.find(p => p.name.toLowerCase() === userName.toLowerCase());
+    let participants = order.participants || [];
+    let participant = participants.find(p => p.name.toLowerCase() === userName.toLowerCase());
 
     if (!participant) {
         participant = {
@@ -58,7 +58,10 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
             name: userName,
             items: [],
         };
-        order.participants.push(participant);
+        participants.push(participant);
+    } else {
+        // create new array with updated participant
+        participants = participants.map(p => p.id === participant!.id ? participant! : p);
     }
     
     const existingItem = participant.items.find(item => item.dish.id === dishId);
@@ -69,7 +72,12 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         participant.items.push({ dish, quantity });
     }
 
-    updateGroupOrder(order.id, order);
+    const updatedOrder = {
+        ...order,
+        participants,
+    };
+
+    await updateGroupOrder(order.id, updatedOrder);
     
     revalidatePath(`/orders/${orderId}`);
     return { message: `${quantity}x ${dish.name} added for ${participant.name}.`, type: "success" };
