@@ -45,7 +45,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [menuItems, setMenuItems] = useState<Partial<Dish>[]>(restaurant.menu || []);
+  const [menuItems, setMenuItems] = useState<Dish[]>(restaurant.menu || []);
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
   const [selectedCategories, setSelectedCategories] = useState<string[]>(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[]);
 
@@ -68,13 +68,20 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   }, [state, toast]);
 
   const handleAddMenuItem = () => {
-    if (currentMenuItem.name && currentMenuItem.price) {
-      setMenuItems([...menuItems, { ...currentMenuItem, id: `new-${Date.now()}` }]);
+    const priceNumber = parseFloat(currentMenuItem.price);
+    if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0) {
+      const newItem: Dish = {
+        id: `new-${Date.now()}-${Math.random()}`,
+        name: currentMenuItem.name,
+        description: currentMenuItem.description || '',
+        price: priceNumber,
+      };
+      setMenuItems([...menuItems, newItem]);
       setCurrentMenuItem({ name: '', description: '', price: '' });
     } else {
       toast({
         title: 'Missing dish details',
-        description: 'Please provide at least a name and price for the menu item.',
+        description: 'Please provide a valid name and a positive price for the menu item.',
         variant: 'destructive',
       });
     }

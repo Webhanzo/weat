@@ -40,7 +40,7 @@ export default function AddRestaurantForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [menuItems, setMenuItems] = useState<Partial<Dish>[]>([]);
+  const [menuItems, setMenuItems] = useState<Dish[]>([]);
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
@@ -56,13 +56,20 @@ export default function AddRestaurantForm() {
   }, [state, toast]);
 
   const handleAddMenuItem = () => {
-    if (currentMenuItem.name && currentMenuItem.price) {
-      setMenuItems([...menuItems, { ...currentMenuItem, id: `new-${Date.now()}` }]);
-      setCurrentMenuItem({ name: '', description: '', price: '' });
+    const priceNumber = parseFloat(currentMenuItem.price);
+    if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0) {
+      const newItem: Dish = {
+        id: `new-${Date.now()}-${Math.random()}`,
+        name: currentMenuItem.name,
+        description: currentMenuItem.description || '',
+        price: priceNumber,
+      };
+      setMenuItems([...menuItems, newItem]);
+      setCurrentMenuItem({ name: '', description: '', price: '' }); // Reset the form
     } else {
         toast({
             title: 'Missing dish details',
-            description: 'Please provide at least a name and price for the menu item.',
+            description: 'Please provide a valid name and a positive price for the menu item.',
             variant: 'destructive',
         });
     }
@@ -150,7 +157,7 @@ export default function AddRestaurantForm() {
                     {menuItems.map((item) => (
                         <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
                            <div>
-                             <p className="font-semibold">{item.name} - ${item.price}</p>
+                             <p className="font-semibold">{item.name} - ${item.price.toFixed(2)}</p>
                              <p className="text-sm text-muted-foreground">{item.description}</p>
                            </div>
                             <Button variant="ghost" size="icon" type="button" onClick={() => handleRemoveMenuItem(item.id!)}>

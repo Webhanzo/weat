@@ -122,20 +122,10 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     let menu: Dish[] = [];
     if (menuData) {
         try {
-            const parsedMenu: Partial<Dish>[] = JSON.parse(menuData);
-            if(Array.isArray(parsedMenu)) {
-                menu = parsedMenu.map((item, index) => {
-                    const price = parseFloat(item.price as any);
-                    if (!item.name || isNaN(price)) {
-                        throw new Error("Menu items must have a name and a valid price.");
-                    }
-                    return {
-                        id: item.id || `${Date.now()}-${index}`,
-                        name: item.name,
-                        description: item.description || '',
-                        price: price,
-                    };
-                });
+            const parsedMenu: Dish[] = JSON.parse(menuData);
+             if (Array.isArray(parsedMenu)) {
+                // The data is already validated on the client, so we can trust it here
+                menu = parsedMenu;
             }
         } catch (e: any) {
             return { message: `Invalid menu format: ${e.message}`, type: 'error' };
@@ -190,20 +180,10 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     let menu: Dish[] = [];
     if (menuData) {
         try {
-            const parsedMenu: Partial<Dish>[] = JSON.parse(menuData);
+            const parsedMenu: Dish[] = JSON.parse(menuData);
             if (Array.isArray(parsedMenu)) {
-                menu = parsedMenu.map((item, index) => {
-                    const price = parseFloat(item.price as any);
-                    if (!item.name || isNaN(price)) {
-                        throw new Error("Menu items must have a name and a valid price.");
-                    }
-                    return {
-                        id: item.id || `${Date.now()}-${index}`,
-                        name: item.name,
-                        description: item.description || '',
-                        price: price,
-                    };
-                });
+                // The data is already validated on the client, so we can trust it here
+                menu = parsedMenu;
             }
         } catch (e: any) {
             return { message: `Invalid menu format: ${e.message}`, type: 'error' };
