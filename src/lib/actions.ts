@@ -2,16 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb } from "./database";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, deleteOrder as deleteOrderFromDb } from "./database";
 import type { GroupOrder, Participant, Restaurant, Dish } from "./types";
 
 export async function createOrder(formData: FormData) {
   const restaurantId = formData.get("restaurantId") as string;
+  let newOrderId;
   if (!restaurantId) {
     return { error: "Restaurant ID is required." };
   }
 
-  let newOrderId;
   try {
     const restaurant = await getRestaurantById(restaurantId);
     if (!restaurant) {
@@ -26,9 +26,12 @@ export async function createOrder(formData: FormData) {
     };
 
     newOrderId = await addGroupOrder(newOrder);
+
   } catch (error: any) {
-    redirect(`/orders/${newOrderId}`);
+     return { error: `Failed to create order: ${error.message}` };
   }
+
+  redirect(`/orders/${newOrderId}`);
 }
 
 export async function addItemToOrder(prevState: any, formData: FormData) {
@@ -138,8 +141,9 @@ export async function addRestaurant(prevState: any, formData: FormData) {
         menu,
     };
 
+    let restaurantId;
     try {
-        await addRestaurantToDb(newRestaurant);
+        restaurantId = await addRestaurantToDb(newRestaurant);
     } catch (e: any) {
         return { message: `Failed to add restaurant: ${e.message}`, type: 'error' };
     }
@@ -238,17 +242,13 @@ export async function finalizeOrder(formData: FormData) {
 export async function deleteRestaurant(formData: FormData) {
     const id = formData.get('id') as string;
     if (!id) {
-        // In a real app, you'd want better error handling here.
-        // For now, we just won't do anything if there's no ID.
         return;
     }
 
     try {
         await deleteRestaurantFromDb(id);
     } catch (error) {
-        // Handle potential errors during deletion, e.g., logging
         console.error("Failed to delete restaurant:", error);
-        // Optionally, return an error state to the UI
         return; 
     }
 
@@ -256,4 +256,22 @@ export async function deleteRestaurant(formData: FormData) {
     revalidatePath('/restaurants/add');
     revalidatePath('/');
     redirect('/orders/create');
+}
+
+export async function deleteOrder(formData: FormData) {
+    const id = formData.get('id') as string;
+    if (!id) {
+        return;
+    }
+
+    try {
+        await deleteOrderFromDb(id);
+    } catch (error) {
+        console.error("Failed to delete order:", error);
+        return; 
+    }
+
+    revalidatePath('/orders/history');
+    revalidatePath('/');
+    redirect('/orders/history');
 }

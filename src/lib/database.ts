@@ -157,3 +157,13 @@ export async function deleteRestaurant(restaurantId: string): Promise<void> {
     const db = getDb();
     await set(ref(db, `restaurants/${restaurantId}`), null);
 }
+
+
+/**
+ * Deletes a group order from the database.
+ * @param orderId The ID of the order to delete.
+ */
+export async function deleteOrder(orderId: string): Promise<void> {
+    const db = getDb();
+    await set(ref(db, `groupOrders/${orderId}`), null);
+}

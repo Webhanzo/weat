@@ -9,6 +9,7 @@ import { Utensils, User, Clock, Pencil, CheckCircle, Info } from "lucide-react";
 import { format } from 'date-fns';
 import FinalizeOrderButton from "@/components/order/finalize-order-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import DeleteOrderButton from "@/components/order/delete-order-button";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -95,19 +96,27 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
         </div>
         <div className="lg:col-span-1 space-y-6">
           <OrderSummary order={order} />
-          {!isFinalized && (
             <Card>
               <CardHeader>
-                <CardTitle>Finalize Order</CardTitle>
+                <CardTitle>{isFinalized ? 'Order Actions' : 'Finalize Order'}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Once finalized, no more items can be added to this order. It will be moved to your order history.
-                </p>
-                <FinalizeOrderButton orderId={order.id} />
+              <CardContent className="space-y-4">
+                {!isFinalized && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Once finalized, no more items can be added to this order. It will be moved to your order history.
+                    </p>
+                    <FinalizeOrderButton orderId={order.id} />
+                  </>
+                )}
+                {isFinalized && (
+                    <p className="text-sm text-muted-foreground">
+                        This order is finalized. You can view it in your history or delete it.
+                    </p>
+                )}
+                <DeleteOrderButton orderId={order.id} />
               </CardContent>
             </Card>
-          )}
         </div>
       </div>
     </div>

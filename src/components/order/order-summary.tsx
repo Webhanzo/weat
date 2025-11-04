@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Separator } from "@/components/ui/separator";
 import type { GroupOrder } from "@/lib/types";
 import { Users, Truck, Wallet } from "lucide-react";
+import { Button } from "../ui/button";
+import Image from "next/image";
 
 type OrderSummaryProps = {
   order: GroupOrder;
@@ -72,11 +74,15 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
             </div>
             <span>${deliveryFee.toFixed(2)}</span>
         </div>
-        <Separator className="my-4"/>
+        <Separator className="my-2"/>
          <div className="w-full flex justify-between items-center text-lg font-bold">
             <span>Grand Total</span>
             <span>${grandTotal.toFixed(2)}</span>
         </div>
+        <Button className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white gap-2">
+            <Image src="https://play-lh.googleusercontent.com/4JaeG-34wK8R2LhHjB-o-k8KjH-3iQAU9YhT-g-q-m_A-a-Gz-6Y_sA-udC10t3sXw=w240-h480-rw" alt="CliQ Logo" width={24} height={24} />
+            Pay with CliQ
+        </Button>
       </CardFooter>
     </Card>
   );
