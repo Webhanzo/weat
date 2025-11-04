@@ -68,9 +68,6 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
             items: [],
         };
         participants.push(participant);
-    } else {
-        // create new array with updated participant
-        participants = participants.map(p => p.id === participant!.id ? participant! : p);
     }
     
     const existingItem = participant.items.find(item => item.dish.id === dishId);
@@ -80,6 +77,13 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
     } else {
         participant.items.push({ dish, quantity });
     }
+
+    // Since we mutated participant, we need to update the participants array
+    const participantIndex = participants.findIndex(p => p.id === participant!.id);
+    if (participantIndex > -1) {
+        participants[participantIndex] = participant;
+    }
+
 
     const updatedOrder = {
         ...order,
@@ -118,17 +122,23 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     let menu: Dish[] = [];
     if (menuData) {
         try {
-            const parsedMenu = JSON.parse(menuData);
+            const parsedMenu: Partial<Dish>[] = JSON.parse(menuData);
             if(Array.isArray(parsedMenu)) {
-                menu = parsedMenu.map((item: any, index: number) => ({
-                    id: `${Date.now()}-${index}`,
-                    name: String(item.name),
-                    description: String(item.description),
-                    price: parseFloat(item.price),
-                }));
+                menu = parsedMenu.map((item, index) => {
+                    const price = parseFloat(item.price as any);
+                    if (!item.name || isNaN(price)) {
+                        throw new Error("Menu items must have a name and a valid price.");
+                    }
+                    return {
+                        id: item.id || `${Date.now()}-${index}`,
+                        name: item.name,
+                        description: item.description || '',
+                        price: price,
+                    };
+                });
             }
-        } catch (e) {
-            return { message: 'Invalid menu format. Please check your JSON.', type: 'error' };
+        } catch (e: any) {
+            return { message: `Invalid menu format: ${e.message}`, type: 'error' };
         }
     }
 
@@ -180,17 +190,23 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     let menu: Dish[] = [];
     if (menuData) {
         try {
-            const parsedMenu = JSON.parse(menuData);
+            const parsedMenu: Partial<Dish>[] = JSON.parse(menuData);
             if (Array.isArray(parsedMenu)) {
-                menu = parsedMenu.map((item: any, index: number) => ({
-                    id: item.id || `${Date.now()}-${index}`,
-                    name: String(item.name),
-                    description: String(item.description),
-                    price: parseFloat(item.price),
-                }));
+                menu = parsedMenu.map((item, index) => {
+                    const price = parseFloat(item.price as any);
+                    if (!item.name || isNaN(price)) {
+                        throw new Error("Menu items must have a name and a valid price.");
+                    }
+                    return {
+                        id: item.id || `${Date.now()}-${index}`,
+                        name: item.name,
+                        description: item.description || '',
+                        price: price,
+                    };
+                });
             }
-        } catch (e) {
-            return { message: 'Invalid menu format. Please check your JSON.', type: 'error' };
+        } catch (e: any) {
+            return { message: `Invalid menu format: ${e.message}`, type: 'error' };
         }
     }
 
@@ -236,7 +252,6 @@ export async function finalizeOrder(formData: FormData) {
   revalidatePath(`/orders/${orderId}`);
   revalidatePath('/orders/history');
   revalidatePath('/');
-  redirect(`/orders/history`);
 }
 
 export async function deleteRestaurant(formData: FormData) {
