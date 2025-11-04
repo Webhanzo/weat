@@ -6,15 +6,37 @@ export default async function CreateOrderPage() {
   const restaurants = await getRestaurants();
 
   const groupedRestaurants = restaurants.reduce((acc, restaurant) => {
-    const category = restaurant.category || "Uncategorized";
-    if (!acc[category]) {
-      acc[category] = [];
+    if (Array.isArray(restaurant.category)) {
+      if (restaurant.category.length > 1) {
+        if (!acc['متنوع']) {
+          acc['متنوع'] = [];
+        }
+        acc['متنوع'].push(restaurant);
+      } else if (restaurant.category.length === 1) {
+        const category = restaurant.category[0];
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(restaurant);
+      }
     }
-    acc[category].push(restaurant);
+    // For older data that might still have category as a string
+    else if (typeof restaurant.category === 'string') {
+        const category = restaurant.category || "Uncategorized";
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(restaurant);
+    }
+
     return acc;
   }, {} as Record<string, Restaurant[]>);
 
-  const categories = Object.keys(groupedRestaurants).sort();
+  const categories = Object.keys(groupedRestaurants).sort((a,b) => {
+    if (a === 'متنوع') return 1;
+    if (b === 'متنوع') return -1;
+    return a.localeCompare(b);
+  });
 
 
   return (

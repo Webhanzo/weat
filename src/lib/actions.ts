@@ -87,12 +87,23 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
     const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
-    const category = formData.get('category') as string;
+    const categoryData = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
-    if (!name || !description || !image || isNaN(deliveryFee) || !category) {
+    if (!name || !description || !image || isNaN(deliveryFee) || !categoryData) {
         return { message: "Please fill all required fields for the restaurant.", type: 'error' };
     }
+
+    let category: string[] = [];
+    try {
+        category = JSON.parse(categoryData);
+        if (!Array.isArray(category) || category.length === 0) {
+            return { message: 'Please select at least one category.', type: 'error' };
+        }
+    } catch (e) {
+        return { message: 'Invalid category format.', type: 'error' };
+    }
+
 
     let menu: Dish[] = [];
     if (menuData) {
@@ -137,12 +148,23 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
     const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
-    const category = formData.get('category') as string;
+    const categoryData = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
-    if (!id || !name || !description || !image || isNaN(deliveryFee) || !category) {
+    if (!id || !name || !description || !image || isNaN(deliveryFee) || !categoryData) {
         return { message: "Please fill all required fields.", type: 'error' };
     }
+
+    let category: string[] = [];
+    try {
+        category = JSON.parse(categoryData);
+        if (!Array.isArray(category) || category.length === 0) {
+            return { message: 'Please select at least one category.', type: 'error' };
+        }
+    } catch (e) {
+        return { message: 'Invalid category format.', type: 'error' };
+    }
+
 
     let menu: Dish[] = [];
     if (menuData) {

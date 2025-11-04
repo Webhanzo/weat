@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { updateRestaurant } from "@/lib/actions";
 import type { Dish, Restaurant } from "@/lib/types";
@@ -13,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const initialState = {
   message: "",
@@ -40,13 +40,14 @@ type EditRestaurantFormProps = {
 };
 
 export default function EditRestaurantForm({ restaurant }: EditRestaurantFormProps) {
-  const router = useRouter();
   const [state, formAction] = useActionState(updateRestaurant, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Partial<Dish>[]>(restaurant.menu || []);
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[]);
+
 
   useEffect(() => {
     if (state?.message) {
@@ -63,7 +64,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
         });
       }
     }
-  }, [state, toast, router]);
+  }, [state, toast]);
 
   const handleAddMenuItem = () => {
     if (currentMenuItem.name && currentMenuItem.price) {
@@ -81,6 +82,14 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   const handleRemoveMenuItem = (id: string) => {
     setMenuItems(menuItems.filter(item => item.id !== id));
   };
+  
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  }
 
   return (
     <Card className="shadow-2xl rounded-2xl">
@@ -117,18 +126,28 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
 
           <div className="space-y-2">
             <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
-            <Select name="category" defaultValue={restaurant.category} required>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start font-normal">
+                  {selectedCategories.length > 0 ? selectedCategories.join(', ') : 'Select categories'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <div className="space-y-1 p-2">
+                  {categories.map(category => (
+                    <div key={category} className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted">
+                       <Checkbox
+                          id={`cat-edit-${category}`}
+                          checked={selectedCategories.includes(category)}
+                          onCheckedChange={() => handleCategoryChange(category)}
+                        />
+                      <Label htmlFor={`cat-edit-${category}`} className="font-normal flex-1 cursor-pointer">{category}</Label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            <input type="hidden" name="category" value={JSON.stringify(selectedCategories)} />
           </div>
 
           <input type="hidden" name="menu" value={JSON.stringify(menuItems)} />

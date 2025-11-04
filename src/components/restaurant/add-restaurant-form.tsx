@@ -12,8 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils, Tag } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const initialState = {
   message: "",
@@ -36,13 +36,14 @@ const categories = [
 ];
 
 export default function AddRestaurantForm() {
-  const router = useRouter();
   const [state, formAction] = useActionState(addRestaurant, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Partial<Dish>[]>([]);
   const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
 
   useEffect(() => {
     if (state?.message && state.type === 'error') {
@@ -70,6 +71,14 @@ export default function AddRestaurantForm() {
   const handleRemoveMenuItem = (id: string) => {
     setMenuItems(menuItems.filter(item => item.id !== id));
   };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  }
   
 
   return (
@@ -106,19 +115,30 @@ export default function AddRestaurantForm() {
 
           <div className="space-y-2">
             <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
-            <Select name="category" required>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start font-normal">
+                  {selectedCategories.length > 0 ? selectedCategories.join(', ') : 'Select categories'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <div className="space-y-1 p-2">
+                  {categories.map(category => (
+                    <div key={category} className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted">
+                       <Checkbox
+                          id={`cat-${category}`}
+                          checked={selectedCategories.includes(category)}
+                          onCheckedChange={() => handleCategoryChange(category)}
+                        />
+                      <Label htmlFor={`cat-${category}`} className="font-normal flex-1 cursor-pointer">{category}</Label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+             <input type="hidden" name="category" value={JSON.stringify(selectedCategories)} />
           </div>
+
 
           {/* Hidden input to pass menu items to server action */}
           <input type="hidden" name="menu" value={JSON.stringify(menuItems)} />

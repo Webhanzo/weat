@@ -12,7 +12,7 @@ export type Restaurant = {
   image: string;
   deliveryFee: number;
   menu: Dish[];
-  category: string;
+  category: string[];
 };
 
 export type OrderItem = {
