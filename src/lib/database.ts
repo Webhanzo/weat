@@ -453,13 +453,11 @@ async function seedDatabase() {
     const snapshot = await get(child(dbRef, 'restaurants'));
     if (!snapshot.exists()) {
         console.log("Seeding database with restaurant data...");
-        const restaurantsWithIds = restaurantsData.map((r, i) => ({...r, id: String(i+1)}));
-        const restaurantNode: {[key: string]: Omit<Restaurant, 'id'>} = {};
-        restaurantsWithIds.forEach(r => {
-            restaurantNode[r.id] = r;
+        const restaurantsRef = ref(db, 'restaurants');
+        restaurantsData.forEach(restaurant => {
+            const newRestaurantRef = push(restaurantsRef);
+            set(newRestaurantRef, restaurant);
         });
-
-        await set(ref(db, 'restaurants'), restaurantNode);
     } else {
         console.log("Database already seeded.");
     }
