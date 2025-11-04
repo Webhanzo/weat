@@ -172,7 +172,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
         revalidatePath(`/restaurants/${id}/edit`);
         revalidatePath(`/orders/create`);
         revalidatePath(`/`);
-        redirect(`/orders/${id}`);
+        redirect(`/orders/create`);
     } catch (e: any) {
         return { message: `Failed to update restaurant: ${e.message}`, type: 'error' };
     }
