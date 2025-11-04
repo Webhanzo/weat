@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, deleteOrder as deleteOrderFromDb } from "./database";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder } from "./database";
 import type { GroupOrder, Participant, Restaurant, Dish } from "./types";
 
 export async function createOrder(formData: FormData) {
@@ -265,12 +265,14 @@ export async function deleteOrder(formData: FormData) {
     }
 
     try {
-        await deleteOrderFromDb(id);
+        // This now moves the order to the history path instead of deleting it.
+        await archiveOrder(id);
     } catch (error) {
-        console.error("Failed to delete order:", error);
+        console.error("Failed to archive order:", error);
         return; 
     }
 
+    revalidatePath(`/orders/${id}`);
     revalidatePath('/orders/history');
     revalidatePath('/');
     redirect('/orders/history');

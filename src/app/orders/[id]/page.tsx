@@ -21,6 +21,9 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
   const participants = order.participants || [];
   const totalItems = participants.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0);
   const isFinalized = order.status === 'finalized';
+  const isArchived = order.status === 'archived'; // Assuming 'archived' status will be used
+  const isModifiable = order.status === 'active';
+
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -36,12 +39,14 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                     Order created on {format(new Date(order.createdAt), "PPP 'at' p")}
                   </CardDescription>
                 </div>
-                <Button asChild variant="outline" size="icon">
-                  <Link href={`/restaurants/${order.restaurant.id}/edit`}>
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit Restaurant</span>
-                  </Link>
-                </Button>
+                {isModifiable && (
+                  <Button asChild variant="outline" size="icon">
+                    <Link href={`/restaurants/${order.restaurant.id}/edit`}>
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit Restaurant</span>
+                    </Link>
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -81,40 +86,41 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
             </CardContent>
           </Card>
           
-          {isFinalized ? (
+          {isFinalized && (
             <Alert variant="default" className="border-green-500 bg-green-500/10">
               <CheckCircle className="h-4 w-4 text-green-500" />
               <AlertTitle className="text-green-600 dark:text-green-400">Order Finalized</AlertTitle>
               <AlertDescription>
-                This order is complete and can no longer be modified.
+                This order is complete and can no longer be modified. It can now be archived.
               </AlertDescription>
             </Alert>
-          ) : (
-            <AddToOrderForm order={order} />
           )}
+
+          {isModifiable && <AddToOrderForm order={order} />}
 
         </div>
         <div className="lg:col-span-1 space-y-6">
           <OrderSummary order={order} />
             <Card>
               <CardHeader>
-                <CardTitle>{isFinalized ? 'Order Actions' : 'Finalize Order'}</CardTitle>
+                <CardTitle>Order Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!isFinalized && (
+                {isModifiable && (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Once finalized, no more items can be added to this order. It will be moved to your order history.
+                      Once finalized, no more items can be added.
                     </p>
                     <FinalizeOrderButton orderId={order.id} />
                   </>
                 )}
                 {isFinalized && (
                     <p className="text-sm text-muted-foreground">
-                        This order is finalized. You can view it in your history or delete it.
+                        This order is finalized. You can now move it to your history.
                     </p>
                 )}
-                <DeleteOrderButton orderId={order.id} />
+                {/* This button will now archive the order */}
+                <DeleteOrderButton orderId={order.id} isFinalized={isFinalized} />
               </CardContent>
             </Card>
         </div>

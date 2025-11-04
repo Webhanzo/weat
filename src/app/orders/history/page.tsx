@@ -1,4 +1,4 @@
-import { getGroupOrders } from "@/lib/database";
+import { getHistoryOrders } from "@/lib/database";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { History, ArrowRight, Users, Utensils, Clock, ShoppingCart } from "lucide-react";
@@ -6,8 +6,7 @@ import Link from "next/link";
 import { format } from 'date-fns';
 
 export default async function OrderHistoryPage() {
-  const allOrders = await getGroupOrders();
-  const finalizedOrders = allOrders.filter(order => order.status === 'finalized');
+  const historyOrders = await getHistoryOrders();
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -17,9 +16,9 @@ export default async function OrderHistoryPage() {
         <p className="text-lg md:text-xl text-muted-foreground mt-2">A record of all your past group orders.</p>
       </div>
 
-      {finalizedOrders.length > 0 ? (
+      {historyOrders.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {finalizedOrders.map(order => {
+          {historyOrders.map(order => {
              const participantCount = order.participants?.length || 0;
              const totalItems = order.participants?.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0) || 0;
              const grandTotal = order.participants?.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + (item.dish.price * item.quantity), 0), 0) + order.restaurant.deliveryFee;
@@ -62,7 +61,7 @@ export default async function OrderHistoryPage() {
         <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
            <History className="mx-auto h-12 w-12 mb-4" />
           <h3 className="text-xl font-semibold">No Past Orders Found</h3>
-          <p>Your finalized group orders will appear here.</p>
+          <p>Your archived group orders will appear here.</p>
         </div>
       )}
     </div>

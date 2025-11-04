@@ -1,4 +1,4 @@
-import { getDatabase, ref, get, set, child, push } from "firebase/database";
+import { getDatabase, ref, get, set, child, push, remove } from "firebase/database";
 import type { Restaurant, GroupOrder } from './types';
 import { initializeFirebase } from "@/firebase";
 
@@ -91,6 +91,25 @@ export async function getGroupOrders(): Promise<GroupOrder[]> {
 }
 
 /**
+ * Fetches all archived orders from the history.
+ * @returns A promise that resolves to an array of historical group orders.
+ */
+export async function getHistoryOrders(): Promise<GroupOrder[]> {
+    const dbRef = ref(getDb(), 'history');
+    const snapshot = await get(dbRef);
+    if (snapshot.exists()) {
+        const ordersObject = snapshot.val();
+        return Object.keys(ordersObject).map(key => ({
+            id: key,
+            ...ordersObject[key],
+        })).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else {
+        return [];
+    }
+}
+
+
+/**
  * Fetches a single group order by its ID.
  * @param id The ID of the group order to fetch.
  * @returns A promise that resolves to the group order object or undefined if not found.
@@ -106,8 +125,18 @@ export async function getGroupOrderById(id: string): Promise<GroupOrder | undefi
         }
         return { id, ...val };
     } else {
-        return undefined;
+        // If not in active orders, check history
+        const historyRef = ref(getDb(), `history/${id}`);
+        const historySnapshot = await get(historyRef);
+        if (historySnapshot.exists()) {
+            const val = historySnapshot.val();
+            if (val.restaurant) {
+                val.restaurant.menu = val.restaurant.menu || [];
+            }
+            return { id, ...val };
+        }
     }
+    return undefined;
 }
 
 /**
@@ -160,10 +189,30 @@ export async function deleteRestaurant(restaurantId: string): Promise<void> {
 
 
 /**
- * Deletes a group order from the database.
+ * Archives a group order by moving it to the 'history' path.
+ * @param orderId The ID of the order to archive.
+ */
+export async function archiveOrder(orderId: string): Promise<void> {
+    const db = getDb();
+    const orderRef = ref(db, `groupOrders/${orderId}`);
+    const snapshot = await get(orderRef);
+
+    if (snapshot.exists()) {
+        const orderData = snapshot.val();
+        const historyRef = ref(db, `history/${orderId}`);
+        
+        await set(historyRef, orderData);
+        await remove(orderRef);
+    } else {
+        throw new Error("Order to archive not found.");
+    }
+}
+
+/**
+ * Deletes a group order from the database (permanently). Used for cleaning up history.
  * @param orderId The ID of the order to delete.
  */
-export async function deleteOrder(orderId: string): Promise<void> {
+export async function deleteOrderFromHistory(orderId: string): Promise<void> {
     const db = getDb();
-    await set(ref(db, `groupOrders/${orderId}`), null);
+    await set(ref(db, `history/${orderId}`), null);
 }
