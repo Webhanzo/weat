@@ -538,3 +538,9 @@ export async function updateGroupOrder(orderId: string, updatedOrder: GroupOrder
     const { id, ...orderData } = updatedOrder;
     await set(ref(db, `groupOrders/${orderId}`), orderData);
 }
+
+export async function updateRestaurant(restaurantId: string, updatedRestaurant: Restaurant): Promise<void> {
+    const db = getDatabase();
+    const { id, ...restaurantData } = updatedRestaurant;
+    await set(ref(db, `restaurants/${restaurantId}`), restaurantData);
+}

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb } from "./database";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb } from "./database";
 import type { GroupOrder, Participant, Restaurant, Dish } from "./types";
 
 export async function createOrder(formData: FormData) {
@@ -44,7 +44,7 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         return { message: "Order not found.", type: "error" };
     }
 
-    const dish = order.restaurant.menu.find(d => d.id === dishId);
+    const dish = order.restaurant.menu?.find(d => d.id === dishId);
     if (!dish) {
         return { message: "Dish not found.", type: "error" };
     }
@@ -126,5 +126,54 @@ export async function addRestaurant(prevState: any, formData: FormData) {
         return { message: `Restaurant "${name}" added successfully with ID ${newId}.`, type: 'success' };
     } catch (e: any) {
         return { message: `Failed to add restaurant: ${e.message}`, type: 'error' };
+    }
+}
+
+export async function updateRestaurant(prevState: any, formData: FormData) {
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const image = formData.get('image') as string;
+    const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
+    const menuData = formData.get('menu') as string;
+
+    if (!id || !name || !description || !image || isNaN(deliveryFee)) {
+        return { message: "Please fill all required fields.", type: 'error' };
+    }
+
+    let menu: Dish[] = [];
+    if (menuData) {
+        try {
+            const parsedMenu = JSON.parse(menuData);
+            if (Array.isArray(parsedMenu)) {
+                menu = parsedMenu.map((item: any, index: number) => ({
+                    id: item.id || `${Date.now()}-${index}`,
+                    name: String(item.name),
+                    description: String(item.description),
+                    price: parseFloat(item.price),
+                }));
+            }
+        } catch (e) {
+            return { message: 'Invalid menu format. Please check your JSON.', type: 'error' };
+        }
+    }
+
+    const restaurantToUpdate: Restaurant = {
+        id,
+        name,
+        description,
+        image,
+        deliveryFee,
+        menu,
+    };
+
+    try {
+        await updateRestaurantInDb(id, restaurantToUpdate);
+        revalidatePath(`/restaurants/${id}/edit`);
+        revalidatePath(`/orders/create`);
+        revalidatePath(`/`);
+        return { message: `Restaurant "${name}" updated successfully.`, type: 'success' };
+    } catch (e: any) {
+        return { message: `Failed to update restaurant: ${e.message}`, type: 'error' };
     }
 }

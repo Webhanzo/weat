@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getGroupOrderById } from "@/lib/database";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import AddToOrderForm from "@/components/order/add-to-order-form";
 import OrderSummary from "@/components/order/order-summary";
-import { Utensils, User, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Utensils, User, Clock, Pencil } from "lucide-react";
 import { format } from 'date-fns';
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
@@ -22,11 +24,21 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
         <div className="lg:col-span-2 space-y-8">
           <Card className="overflow-hidden shadow-lg rounded-2xl">
             <CardHeader className="bg-muted/50 p-6">
-              <CardTitle className="font-headline text-4xl">{order.restaurant.name}</CardTitle>
-              <CardDescription className="flex items-center pt-2 text-base">
-                <Clock className="h-4 w-4 mr-2" />
-                Order created on {format(new Date(order.createdAt), "PPP 'at' p")}
-              </CardDescription>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="font-headline text-4xl">{order.restaurant.name}</CardTitle>
+                  <CardDescription className="flex items-center pt-2 text-base">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Order created on {format(new Date(order.createdAt), "PPP 'at' p")}
+                  </CardDescription>
+                </div>
+                <Button asChild variant="outline" size="icon">
+                  <Link href={`/restaurants/${order.restaurant.id}/edit`}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit Restaurant</span>
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-6">
                 <div className="grid grid-cols-2 gap-4 text-muted-foreground mb-6">
