@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GroupOrder } from "@/lib/types";
-import { Users, Truck, Wallet, Info } from "lucide-react";
+import { Users, Truck, Wallet, Info, AtSign } from "lucide-react";
 import Image from "next/image";
 
 type OrderSummaryProps = {
@@ -19,7 +19,7 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
   const participantTotals = participants.map(p => {
     const subtotal = p.items.reduce((acc, item) => acc + item.dish.price * item.quantity, 0);
     const total = subtotal + deliveryFeePerPerson;
-    return { name: p.name, subtotal, total };
+    return { name: p.name, cliqAlias: p.cliqAlias, subtotal, total };
   });
 
   const grandTotal = participantTotals.reduce((acc, p) => acc + p.total, 0);
@@ -36,7 +36,15 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
         {participants.length > 0 ? (
           participantTotals.map((p, index) => (
             <div key={index} className="space-y-2">
-              <h4 className="font-bold text-lg">{p.name}'s Total</h4>
+              <div className="flex justify-between items-center">
+                <h4 className="font-bold text-lg">{p.name}</h4>
+                {p.cliqAlias && (
+                  <div className="flex items-center text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                    <AtSign className="h-3 w-3 mr-1" />
+                    <span>{p.cliqAlias}</span>
+                  </div>
+                )}
+              </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>${p.subtotal.toFixed(2)}</span>
@@ -80,7 +88,7 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
         </div>
         <div className="flex items-start text-sm text-muted-foreground bg-blue-500/10 p-3 rounded-md border border-blue-500/20 w-full">
             <Info className="h-4 w-4 mr-2 mt-0.5 text-blue-500" />
-            <p>يمكن تسوية الدفع بين المشاركين خارج التطبيق.</p>
+            <p>يمكن تسوية الدفع بين المشاركين باستخدام معرّفات Cliq الخاصة بهم.</p>
         </div>
       </CardFooter>
     </Card>

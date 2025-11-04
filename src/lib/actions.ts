@@ -37,6 +37,7 @@ export async function createOrder(formData: FormData) {
 export async function addItemToOrder(prevState: any, formData: FormData) {
     const orderId = formData.get("orderId") as string;
     const userName = formData.get("userName") as string;
+    const cliqAlias = formData.get("cliqAlias") as string;
     const dishId = formData.get("dishId") as string;
     const quantity = parseInt(formData.get("quantity") as string, 10);
 
@@ -65,10 +66,13 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         participant = {
             id: `p-${Date.now()}`,
             name: userName,
+            cliqAlias: cliqAlias,
             items: [],
         };
         participants.push(participant);
     } else {
+        // Update cliq alias if provided, otherwise keep the old one
+        participant.cliqAlias = cliqAlias || participant.cliqAlias;
         // create new array with updated participant
         participants = participants.map(p => p.id === participant!.id ? participant! : p);
     }

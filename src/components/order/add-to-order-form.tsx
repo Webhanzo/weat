@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from '@/components/ui/submit-button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, AtSign } from 'lucide-react';
 
 type AddToOrderFormProps = {
     order: GroupOrder;
@@ -59,25 +59,31 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
               <Label htmlFor="userName">Your Name</Label>
               <Input id="userName" name="userName" placeholder="e.g., Jane Doe" required />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="cliqAlias" className="flex items-center"><AtSign className="h-4 w-4 mr-2 text-muted-foreground"/>Cliq Alias</Label>
+              <Input id="cliqAlias" name="cliqAlias" placeholder="e.g., JDOE" />
+            </div>
+          </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="space-y-2">
+              <Label htmlFor="dishId">Menu Item</Label>
+              <Select name="dishId" required>
+                <SelectTrigger id="dishId">
+                  <SelectValue placeholder="Select a dish to add" />
+                </SelectTrigger>
+                <SelectContent>
+                  {order.restaurant.menu && order.restaurant.menu.map(dish => (
+                    <SelectItem key={dish.id} value={dish.id}>
+                      {dish.name} - ${dish.price.toFixed(2)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
              <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
               <Input id="quantity" name="quantity" type="number" defaultValue="1" min="1" required />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dishId">Menu Item</Label>
-            <Select name="dishId" required>
-              <SelectTrigger id="dishId">
-                <SelectValue placeholder="Select a dish to add" />
-              </SelectTrigger>
-              <SelectContent>
-                {order.restaurant.menu && order.restaurant.menu.map(dish => (
-                  <SelectItem key={dish.id} value={dish.id}>
-                    {dish.name} - ${dish.price.toFixed(2)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           <SubmitButton className="w-full font-bold">Add to Order</SubmitButton>
         </form>
