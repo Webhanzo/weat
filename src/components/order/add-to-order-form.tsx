@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from '@/components/ui/submit-button';
-import { PlusCircle, AtSign } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 
 type AddToOrderFormProps = {
     order: GroupOrder;
@@ -54,15 +54,9 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-6">
           <input type="hidden" name="orderId" value={order.id} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="userName">Your Name</Label>
-              <Input id="userName" name="userName" placeholder="e.g., Jane Doe" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cliqAlias" className="flex items-center"><AtSign className="h-4 w-4 mr-2 text-muted-foreground"/>Cliq Alias</Label>
-              <Input id="cliqAlias" name="cliqAlias" placeholder="e.g., JDOE" />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="userName">Your Name</Label>
+            <Input id="userName" name="userName" placeholder="e.g., Jane Doe" required />
           </div>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div className="space-y-2">

@@ -23,7 +23,6 @@ export type OrderItem = {
 export type Participant = {
   id:string;
   name: string;
-  cliqAlias?: string;
   items: OrderItem[];
 };
 

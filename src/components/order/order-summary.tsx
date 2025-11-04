@@ -19,7 +19,7 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
   const participantTotals = participants.map(p => {
     const subtotal = p.items.reduce((acc, item) => acc + item.dish.price * item.quantity, 0);
     const total = subtotal + deliveryFeePerPerson;
-    return { name: p.name, cliqAlias: p.cliqAlias, subtotal, total };
+    return { name: p.name, subtotal, total };
   });
 
   const grandTotal = participantTotals.reduce((acc, p) => acc + p.total, 0);
@@ -38,12 +38,6 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-center">
                 <h4 className="font-bold text-lg">{p.name}</h4>
-                {p.cliqAlias && (
-                  <div className="flex items-center text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full">
-                    <AtSign className="h-3 w-3 mr-1" />
-                    <span>{p.cliqAlias}</span>
-                  </div>
-                )}
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
