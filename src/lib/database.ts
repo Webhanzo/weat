@@ -1,4 +1,4 @@
-import { getDatabase, ref, get, set, child } from "firebase/database";
+import { getDatabase, ref, get, set, child, push } from "firebase/database";
 import type { Restaurant, GroupOrder } from './types';
 import { initializeFirebase } from "@/firebase";
 
@@ -454,28 +454,50 @@ async function seedDatabase() {
     if (!snapshot.exists()) {
         console.log("Seeding database with restaurant data...");
         const restaurantsWithIds = restaurantsData.map((r, i) => ({...r, id: String(i+1)}));
-        await set(ref(db, 'restaurants'), restaurantsWithIds);
+        const restaurantNode: {[key: string]: Omit<Restaurant, 'id'>} = {};
+        restaurantsWithIds.forEach(r => {
+            restaurantNode[r.id] = r;
+        });
+
+        await set(ref(db, 'restaurants'), restaurantNode);
     } else {
         console.log("Database already seeded.");
     }
 }
 seedDatabase();
 
+export async function addRestaurant(restaurant: Omit<Restaurant, 'id'>): Promise<string> {
+    const db = getDatabase();
+    const restaurantsRef = ref(db, 'restaurants');
+    const newRestaurantRef = push(restaurantsRef);
+    const newId = newRestaurantRef.key;
+    if (!newId) {
+        throw new Error("Failed to generate a new ID for the restaurant.");
+    }
+    await set(newRestaurantRef, {...restaurant, id: newId});
+    return newId;
+}
+
+
 export async function getRestaurants(): Promise<Restaurant[]> {
     const dbRef = ref(getDatabase());
     const snapshot = await get(child(dbRef, 'restaurants'));
     if (snapshot.exists()) {
         const val = snapshot.val();
-        // Firebase returns an array-like object, convert it to a real array, filtering out nulls if any
-        return Object.values(val || {}).filter(r => r) as Restaurant[];
+        // Firebase returns an object, convert it to a real array
+        return Object.keys(val).map(key => ({ id: key, ...val[key] })) as Restaurant[];
     } else {
         return [];
     }
 }
 
 export async function getRestaurantById(id: string): Promise<Restaurant | undefined> {
-    const restaurants = await getRestaurants();
-    return restaurants.find(r => r.id === id);
+    const dbRef = ref(getDatabase());
+    const snapshot = await get(child(dbRef, `restaurants/${id}`));
+    if(snapshot.exists()) {
+        return { id, ...snapshot.val() };
+    }
+    return undefined;
 }
 
 export async function getGroupOrders(): Promise<GroupOrder[]> {

@@ -23,6 +23,9 @@ export default function Header() {
                 <Button asChild variant="ghost">
                     <Link href="/suggestions">Suggestions</Link>
                 </Button>
+                <Button asChild variant="ghost">
+                    <Link href="/restaurants/add">Add Restaurant</Link>
+                </Button>
             </nav>
         </div>
       </div>
