@@ -122,28 +122,30 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     let menu: Dish[] = [];
     if (menuData) {
         try {
-            const parsedMenu: Dish[] = JSON.parse(menuData);
+            const parsedMenu: Omit<Dish, 'id'>[] = JSON.parse(menuData);
              if (Array.isArray(parsedMenu)) {
-                // The data is already validated on the client, so we can trust it here
-                menu = parsedMenu;
+                menu = parsedMenu.map(item => ({
+                    id: item.id || `dish-${Date.now()}-${Math.random()}`,
+                    ...item,
+                    price: Number(item.price) || 0,
+                    description: item.description || ''
+                }));
             }
         } catch (e: any) {
             return { message: `Invalid menu format: ${e.message}`, type: 'error' };
         }
     }
 
-    const newRestaurant: Omit<Restaurant, 'id'> = {
+    const newRestaurantData: Omit<Restaurant, 'id' | 'menu'> = {
         name,
         description,
         image,
         deliveryFee,
         category,
-        menu,
     };
 
-    let restaurantId;
     try {
-        restaurantId = await addRestaurantToDb(newRestaurant);
+        await addRestaurantToDb(newRestaurantData, menu);
     } catch (e: any) {
         return { message: `Failed to add restaurant: ${e.message}`, type: 'error' };
     }
@@ -182,26 +184,27 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
         try {
             const parsedMenu: Dish[] = JSON.parse(menuData);
             if (Array.isArray(parsedMenu)) {
-                // The data is already validated on the client, so we can trust it here
-                menu = parsedMenu;
+                menu = parsedMenu.map(item => ({
+                    ...item,
+                    price: Number(item.price) || 0,
+                    description: item.description || ''
+                }));
             }
         } catch (e: any) {
             return { message: `Invalid menu format: ${e.message}`, type: 'error' };
         }
     }
 
-    const restaurantToUpdate: Restaurant = {
-        id,
+    const restaurantData: Omit<Restaurant, 'id' | 'menu'> = {
         name,
         description,
         image,
         deliveryFee,
         category,
-        menu,
     };
 
     try {
-        await updateRestaurantInDb(id, restaurantToUpdate);
+        await updateRestaurantInDb(id, restaurantData, menu);
     } catch (e: any) {
         return { message: `Failed to update restaurant: ${e.message}`, type: 'error' };
     }
