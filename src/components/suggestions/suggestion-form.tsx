@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { suggestRestaurantsAndDishes } from '@/ai/flows/suggest-restaurants-and-dishes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -38,7 +38,7 @@ async function getSuggestionsAction(prevState: SuggestionState, formData: FormDa
 
 
 export default function SuggestionForm() {
-    const [state, formAction] = useFormState(getSuggestionsAction, initialState);
+    const [state, formAction] = useActionState(getSuggestionsAction, initialState);
     const { toast } = useToast();
 
      useEffect(() => {

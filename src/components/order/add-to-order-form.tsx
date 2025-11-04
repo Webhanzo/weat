@@ -1,7 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
-import { useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { addItemToOrder } from '@/lib/actions';
 import type { GroupOrder } from '@/lib/types';
@@ -22,7 +21,7 @@ const initialState = {
 };
 
 export default function AddToOrderForm({ order }: AddToOrderFormProps) {
-  const [state, formAction] = useFormState(addItemToOrder, initialState);
+  const [state, formAction] = useActionState(addItemToOrder, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
