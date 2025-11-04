@@ -18,7 +18,7 @@ export default function Header() {
                     <Link href="/">Home</Link>
                 </Button>
                 <Button asChild variant="ghost">
-                    <Link href="/orders/create">Orders</Link>
+                    <Link href="/orders/create">انشاء طلب</Link>
                 </Button>
                 <Button asChild variant="ghost">
                     <Link href="/orders/history">History</Link>
