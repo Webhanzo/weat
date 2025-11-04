@@ -119,14 +119,13 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     }
 
 
-    let menu: Dish[] = [];
+    let menu: Omit<Dish, 'id'>[] = [];
     if (menuData) {
         try {
             const parsedMenu: Omit<Dish, 'id'>[] = JSON.parse(menuData);
              if (Array.isArray(parsedMenu)) {
                 menu = parsedMenu.map(item => ({
-                    id: item.id || `dish-${Date.now()}-${Math.random()}`,
-                    ...item,
+                    name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || ''
                 }));
@@ -185,7 +184,8 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
             const parsedMenu: Dish[] = JSON.parse(menuData);
             if (Array.isArray(parsedMenu)) {
                 menu = parsedMenu.map(item => ({
-                    ...item,
+                    id: item.id,
+                    name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || ''
                 }));
@@ -210,7 +210,8 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     }
     
     revalidatePath(`/restaurants/${id}/edit`);
-    revalidatePath(`/orders/create`);
+    revalidatePath(`/orders/${id}`);
+    revalidatePath('/orders/create');
     revalidatePath(`/`);
     redirect('/orders/create');
 }
@@ -263,10 +264,10 @@ export async function deleteOrder(formData: FormData) {
     }
 
     try {
-        // This now moves the order to the history path instead of deleting it.
+        // This now moves the order to the history path (or deletes from history if already there)
         await archiveOrder(id);
     } catch (error) {
-        console.error("Failed to archive order:", error);
+        console.error("Failed to archive or delete order:", error);
         return; 
     }
 

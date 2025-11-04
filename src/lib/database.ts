@@ -20,7 +20,7 @@ function getDb() {
  * @param menuItems The array of dish objects to add to the restaurant's menu.
  * @returns The ID of the newly created restaurant.
  */
-export async function addRestaurant(restaurantData: Omit<Restaurant, 'id' | 'menu'>, menuItems: Dish[]): Promise<string> {
+export async function addRestaurant(restaurantData: Omit<Restaurant, 'id' | 'menu'>, menuItems: Omit<Dish, 'id'>[]): Promise<string> {
     const db = getDb();
     const restaurantsRef = ref(db, 'restaurants');
     const newRestaurantRef = push(restaurantsRef);
@@ -29,20 +29,22 @@ export async function addRestaurant(restaurantData: Omit<Restaurant, 'id' | 'men
         throw new Error("Failed to generate a new ID for the restaurant.");
     }
     
-    // Set the main restaurant data
+    // Set the main restaurant data (without the menu)
     await set(newRestaurantRef, restaurantData);
 
-    // Set the menu items in a separate path
-    const menuItemsRef = ref(db, `restaurants/${newId}/menuItems`);
-    const menuItemsWithIds = menuItems.reduce((acc, item) => {
-        const newItemId = push(child(menuItemsRef, 'tmp')).key; // Generate a unique key for the dish
-        if (newItemId) {
-            acc[newItemId] = { ...item, id: newItemId };
-        }
-        return acc;
-    }, {} as { [key: string]: Dish });
+    // Set the menu items in a separate path: restaurants/{restaurantId}/menuItems
+    if (menuItems && menuItems.length > 0) {
+        const menuItemsRef = ref(db, `restaurants/${newId}/menuItems`);
+        const menuItemsWithIds = menuItems.reduce((acc, item) => {
+            const newItemId = push(child(menuItemsRef, 'tmp')).key; // Generate a unique key for the dish
+            if (newItemId) {
+                acc[newItemId] = { ...item, id: newItemId };
+            }
+            return acc;
+        }, {} as { [key: string]: Dish });
 
-    await set(menuItemsRef, menuItemsWithIds);
+        await set(menuItemsRef, menuItemsWithIds);
+    }
 
     return newId;
 }
@@ -114,10 +116,21 @@ export async function getGroupOrders(): Promise<GroupOrder[]> {
     if (snapshot.exists()) {
         const ordersObject = snapshot.val();
         // Convert the orders object into an array and add the ID to each order.
-        return Object.keys(ordersObject).map(key => ({
-            id: key,
-            ...ordersObject[key],
-        })).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Sort by most recent
+        const orders = await Promise.all(Object.keys(ordersObject).map(async key => {
+            const orderData = ordersObject[key];
+            // Ensure we get the full restaurant details including the menu
+            if (orderData.restaurant && orderData.restaurant.id) {
+                const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
+                if (fullRestaurant) {
+                    orderData.restaurant = fullRestaurant;
+                }
+            }
+            return {
+                id: key,
+                ...orderData,
+            };
+        }));
+        return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Sort by most recent
     } else {
         return [];
     }
@@ -132,10 +145,21 @@ export async function getHistoryOrders(): Promise<GroupOrder[]> {
     const snapshot = await get(dbRef);
     if (snapshot.exists()) {
         const ordersObject = snapshot.val();
-        return Object.keys(ordersObject).map(key => ({
-            id: key,
-            ...ordersObject[key],
-        })).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const orders = await Promise.all(Object.keys(ordersObject).map(async key => {
+             const orderData = ordersObject[key];
+            // Ensure we get the full restaurant details including the menu
+            if (orderData.restaurant && orderData.restaurant.id) {
+                const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
+                if (fullRestaurant) {
+                    orderData.restaurant = fullRestaurant;
+                }
+            }
+            return {
+                id: key,
+                ...orderData,
+            };
+        }));
+        return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else {
         return [];
     }
@@ -143,51 +167,47 @@ export async function getHistoryOrders(): Promise<GroupOrder[]> {
 
 
 /**
- * Fetches a single group order by its ID.
+ * Fetches a single group order by its ID from either active orders or history.
  * @param id The ID of the group order to fetch.
  * @returns A promise that resolves to the group order object or undefined if not found.
  */
 export async function getGroupOrderById(id: string): Promise<GroupOrder | undefined> {
     const db = getDb();
-    const dbRef = ref(db, `groupOrders/${id}`);
-    const snapshot = await get(dbRef);
-    if (snapshot.exists()) {
-        const val = snapshot.val();
-        
-        // Ensure the restaurant object within the order always has a menu array.
-        // This might require fetching the restaurant again if the structure is inconsistent
-        if (val.restaurant && val.restaurant.id) {
-            const restaurant = await getRestaurantById(val.restaurant.id);
-            if (restaurant) {
-                val.restaurant = restaurant;
-            } else {
-                 val.restaurant.menu = val.restaurant.menu || [];
-            }
-        } else if(val.restaurant) {
-             val.restaurant.menu = val.restaurant.menu || [];
-        }
-
-        return { id, ...val };
-    } else {
-        // If not in active orders, check history
-        const historyRef = ref(db, `history/${id}`);
-        const historySnapshot = await get(historyRef);
-        if (historySnapshot.exists()) {
-            const val = historySnapshot.val();
+    
+    async function fetchOrderFromPath(path: string): Promise<GroupOrder | undefined> {
+        const orderRef = ref(db, path);
+        const snapshot = await get(orderRef);
+        if (snapshot.exists()) {
+            const val = snapshot.val();
+            
+            // Ensure the restaurant object within the order always has its full menu.
             if (val.restaurant && val.restaurant.id) {
                 const restaurant = await getRestaurantById(val.restaurant.id);
-                 if (restaurant) {
+                if (restaurant) {
                     val.restaurant = restaurant;
                 } else {
+                    // If restaurant is deleted, keep the partial data but ensure menu is an array
                     val.restaurant.menu = val.restaurant.menu || [];
                 }
-            } else if (val.restaurant) {
+            } else if(val.restaurant) {
+                // Fallback if restaurant object is missing an ID but exists
                 val.restaurant.menu = val.restaurant.menu || [];
             }
+            
             return { id, ...val };
         }
+        return undefined;
     }
-    return undefined;
+
+    // Try fetching from active orders first
+    let order = await fetchOrderFromPath(`groupOrders/${id}`);
+    if (order) {
+        return order;
+    }
+    
+    // If not found, check history
+    order = await fetchOrderFromPath(`history/${id}`);
+    return order;
 }
 
 
@@ -205,11 +225,11 @@ export async function addGroupOrder(order: Omit<GroupOrder, 'id'>): Promise<stri
         throw new Error("Failed to generate a new ID for the order.");
     }
     
-    // We need to strip the menu from the restaurant object before saving
+    // We need to strip the menu from the restaurant object before saving to avoid data duplication
     const { menu, ...restaurantWithoutMenu } = order.restaurant;
     const orderToSave = {
         ...order,
-        restaurant: restaurantWithoutMenu,
+        restaurant: restaurantWithoutMenu, // only store restaurant reference/details, not the full menu
     };
     
     await set(newOrderRef, orderToSave);
@@ -225,8 +245,9 @@ export async function updateGroupOrder(orderId: string, updatedOrder: GroupOrder
     const db = getDb();
     const { id, ...orderData } = updatedOrder; // The ID is the key, so we don't store it in the object itself.
     
-    // We need to strip the menu from the restaurant object before saving
+    // Strip the menu from the restaurant object to avoid duplicating data
     if (orderData.restaurant) {
+        // The menu might not exist if it was already stripped, so we check
         const { menu, ...restaurantWithoutMenu } = orderData.restaurant;
         orderData.restaurant = restaurantWithoutMenu as any;
     }
@@ -244,20 +265,22 @@ export async function updateRestaurant(restaurantId: string, restaurantData: Omi
     const db = getDb();
     
     // Update the core restaurant data
-    await set(ref(db, `restaurants/${restaurantId}`), restaurantData);
+    const restaurantRef = ref(db, `restaurants/${restaurantId}`);
+    await set(child(restaurantRef, '/'), restaurantData);
 
     // Replace the entire menuItems collection for simplicity
     const menuItemsRef = ref(db, `restaurants/${restaurantId}/menuItems`);
     
     const menuItemsWithIds = menuItems.reduce((acc, item) => {
-        // Use existing ID or generate a new one if it's a new item
-        const newItemId = item.id.startsWith('new-') ? push(child(menuItemsRef, 'tmp')).key : item.id;
+        // Use existing ID or generate a new one if it's a new item (e.g., starts with 'new-')
+        const newItemId = item.id && !item.id.startsWith('new-') ? item.id : push(child(menuItemsRef, 'tmp')).key;
         if (newItemId) {
             acc[newItemId] = { ...item, id: newItemId };
         }
         return acc;
     }, {} as { [key: string]: Dish });
 
+    // Set the new menu, this will overwrite any existing menu items
     await set(menuItemsRef, menuItemsWithIds);
 }
 
@@ -269,7 +292,7 @@ export async function updateRestaurant(restaurantId: string, restaurantData: Omi
 export async function deleteRestaurant(restaurantId: string): Promise<void> {
     const db = getDb();
     // This will delete the restaurant and all its sub-paths (including menuItems)
-    await set(ref(db, `restaurants/${restaurantId}`), null);
+    await remove(ref(db, `restaurants/${restaurantId}`));
 }
 
 
@@ -284,12 +307,27 @@ export async function archiveOrder(orderId: string): Promise<void> {
 
     if (snapshot.exists()) {
         const orderData = snapshot.val();
-        const historyRef = ref(db, `history/${orderId}`);
         
+        // Strip menu from restaurant object if it exists to avoid archival bloat
+        if (orderData.restaurant && orderData.restaurant.menu) {
+            const { menu, ...restaurantWithoutMenu } = orderData.restaurant;
+            orderData.restaurant = restaurantWithoutMenu;
+        }
+
+        const historyRef = ref(db, `history/${orderId}`);
         await set(historyRef, orderData);
         await remove(orderRef);
     } else {
-        throw new Error("Order to archive not found.");
+        // If it's not in groupOrders, it might be an attempt to delete an already archived order.
+        // For now, we'll throw an error, but this could be handled differently.
+        const historyRef = ref(db, `history/${orderId}`);
+        const historySnapshot = await get(historyRef);
+        if (historySnapshot.exists()) {
+             // If the user wants to delete from history, we can do that here.
+             await remove(historyRef);
+        } else {
+            throw new Error("Order to archive or delete not found.");
+        }
     }
 }
 
@@ -299,5 +337,5 @@ export async function archiveOrder(orderId: string): Promise<void> {
  */
 export async function deleteOrderFromHistory(orderId: string): Promise<void> {
     const db = getDb();
-    await set(ref(db, `history/${orderId}`), null);
+    await remove(ref(db, `history/${orderId}`));
 }
