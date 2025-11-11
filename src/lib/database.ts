@@ -35,14 +35,14 @@ export async function addRestaurant(restaurantData: Omit<Restaurant, 'id' | 'men
     // Set the menu items in a separate path: restaurants/{restaurantId}/menuItems
     if (menuItems && menuItems.length > 0) {
         const menuItemsRef = ref(db, `restaurants/${newId}/menuItems`);
-        const menuItemsWithIds = menuItems.reduce((acc, item) => {
-            const newItemId = push(child(menuItemsRef, 'tmp')).key; // Generate a unique key for the dish
-            if (newItemId) {
-                acc[newItemId] = { ...item, id: newItemId };
+        const menuItemsWithIds: { [key: string]: Dish } = {};
+        
+        for (const item of menuItems) {
+            const newItemId = push(menuItemsRef).key;
+            if(newItemId) {
+                menuItemsWithIds[newItemId] = { ...item, id: newItemId };
             }
-            return acc;
-        }, {} as { [key: string]: Dish });
-
+        }
         await set(menuItemsRef, menuItemsWithIds);
     }
 
@@ -266,19 +266,21 @@ export async function updateRestaurant(restaurantId: string, restaurantData: Omi
     
     // Update the core restaurant data
     const restaurantRef = ref(db, `restaurants/${restaurantId}`);
-    await set(child(restaurantRef, '/'), restaurantData);
+    await set(restaurantRef, restaurantData);
 
     // Replace the entire menuItems collection for simplicity
     const menuItemsRef = ref(db, `restaurants/${restaurantId}/menuItems`);
     
-    const menuItemsWithIds = menuItems.reduce((acc, item) => {
-        // Use existing ID or generate a new one if it's a new item (e.g., starts with 'new-')
-        const newItemId = item.id && !item.id.startsWith('new-') ? item.id : push(child(menuItemsRef, 'tmp')).key;
-        if (newItemId) {
-            acc[newItemId] = { ...item, id: newItemId };
+    const menuItemsWithIds: { [key: string]: Dish } = {};
+    if (menuItems && menuItems.length > 0) {
+        for (const item of menuItems) {
+            // Use existing ID or generate a new one if it's a new item (e.g., starts with 'new-')
+            const newItemId = item.id && !item.id.startsWith('new-') ? item.id : push(menuItemsRef).key;
+            if (newItemId) {
+                menuItemsWithIds[newItemId] = { ...item, id: newItemId };
+            }
         }
-        return acc;
-    }, {} as { [key: string]: Dish });
+    }
 
     // Set the new menu, this will overwrite any existing menu items
     await set(menuItemsRef, menuItemsWithIds);

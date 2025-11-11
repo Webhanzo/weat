@@ -122,7 +122,7 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     let menu: Omit<Dish, 'id'>[] = [];
     if (menuData) {
         try {
-            const parsedMenu: Omit<Dish, 'id'>[] = JSON.parse(menuData);
+            const parsedMenu: Dish[] = JSON.parse(menuData);
              if (Array.isArray(parsedMenu)) {
                 menu = parsedMenu.map(item => ({
                     name: item.name,
