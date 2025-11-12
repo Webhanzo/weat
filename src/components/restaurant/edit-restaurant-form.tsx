@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag } from "lucide-react";
+import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag, Pencil, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import DeleteRestaurantButton from "./delete-restaurant-button";
@@ -46,7 +46,8 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Dish[]>(restaurant.menu || []);
-  const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
+  const [currentMenuItem, setCurrentMenuItem] = useState({ id: '', name: '', description: '', price: '' });
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[]);
 
 
@@ -67,17 +68,34 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
     }
   }, [state, toast]);
 
-  const handleAddMenuItem = () => {
+  const resetDishForm = () => {
+    setCurrentMenuItem({ id: '', name: '', description: '', price: '' });
+    setIsEditing(false);
+  }
+
+  const handleAddOrUpdateMenuItem = () => {
     const priceNumber = parseFloat(currentMenuItem.price);
     if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0) {
-      const newItem: Dish = {
-        id: `new-${Date.now()}-${Math.random()}`,
-        name: currentMenuItem.name,
-        description: currentMenuItem.description || '',
-        price: priceNumber,
-      };
-      setMenuItems([...menuItems, newItem]);
-      setCurrentMenuItem({ name: '', description: '', price: '' });
+      if(isEditing) {
+        // Update existing item
+        setMenuItems(menuItems.map(item => 
+          item.id === currentMenuItem.id 
+            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description, price: priceNumber }
+            : item
+        ));
+        toast({ title: 'Dish Updated', description: `${currentMenuItem.name} has been updated.`});
+      } else {
+        // Add new item
+        const newItem: Dish = {
+          id: `new-${Date.now()}-${Math.random()}`,
+          name: currentMenuItem.name,
+          description: currentMenuItem.description || '',
+          price: priceNumber,
+        };
+        setMenuItems([...menuItems, newItem]);
+        toast({ title: 'Dish Added', description: `${newItem.name} has been added to the menu.`});
+      }
+      resetDishForm();
     } else {
       toast({
         title: 'Missing dish details',
@@ -87,8 +105,21 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
     }
   };
 
+  const handleEditClick = (dish: Dish) => {
+      setIsEditing(true);
+      setCurrentMenuItem({
+        id: dish.id,
+        name: dish.name,
+        description: dish.description || '',
+        price: dish.price.toString()
+      });
+  }
+
   const handleRemoveMenuItem = (id: string) => {
     setMenuItems(menuItems.filter(item => item.id !== id));
+     if(isEditing && currentMenuItem.id === id) {
+        resetDishForm();
+    }
   };
   
   const handleCategoryChange = (category: string) => {
@@ -161,43 +192,56 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
           <input type="hidden" name="menu" value={JSON.stringify(menuItems)} />
 
           <div className="space-y-4 rounded-lg border p-4">
-            <h3 className="font-headline text-lg">Menu Items</h3>
+            <h3 className="font-headline text-lg">{isEditing ? 'Edit Menu Item' : 'Add Menu Item'}</h3>
             {menuItems.length > 0 && (
               <div className="space-y-2">
                 {menuItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                  <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md gap-2">
                     <div>
                       <p className="font-semibold">{item.name} - ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
-                    <Button variant="ghost" size="icon" type="button" onClick={() => handleRemoveMenuItem(item.id!)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" type="button" onClick={() => handleEditClick(item)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" type="button" onClick={() => handleRemoveMenuItem(item.id!)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="menuItemName">Dish Name</Label>
-              <Input id="menuItemName" value={currentMenuItem.name} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, name: e.target.value })} placeholder="e.g., Classic Burger" />
+            <div className="p-4 border border-dashed rounded-lg space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="menuItemName">Dish Name</Label>
+                  <Input id="menuItemName" value={currentMenuItem.name} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, name: e.target.value })} placeholder="e.g., Classic Burger" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="menuItemDescription">Dish Description</Label>
+                  <Input id="menuItemDescription" value={currentMenuItem.description} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, description: e.target.value })} placeholder="e.g., A juicy beef patty..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="menuItemPrice">Dish Price</Label>
+                  <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, price: e.target.value })} placeholder="e.g., 12.50" />
+                </div>
+                <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={handleAddOrUpdateMenuItem} className="w-full">
+                        {isEditing ? <><Save className="mr-2 h-4 w-4" /> Update Item</> : <><PlusCircle className="mr-2 h-4 w-4" /> Add Item</>}
+                    </Button>
+                    {isEditing && (
+                        <Button type="button" variant="ghost" size="icon" onClick={resetDishForm}>
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="menuItemDescription">Dish Description</Label>
-              <Input id="menuItemDescription" value={currentMenuItem.description} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, description: e.target.value })} placeholder="e.g., A juicy beef patty..." />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="menuItemPrice">Dish Price</Label>
-              <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, price: e.target.value })} placeholder="e.g., 12.50" />
-            </div>
-            <Button type="button" variant="outline" onClick={handleAddMenuItem} className="w-full">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Menu Item
-            </Button>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <SubmitButton className="w-full font-bold">
               <Save className="mr-2 h-4 w-4" />
-              Save Changes
+              Save Changes to Restaurant
             </SubmitButton>
             <DeleteRestaurantButton restaurantId={restaurant.id} />
           </div>

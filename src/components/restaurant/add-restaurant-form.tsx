@@ -167,22 +167,24 @@ export default function AddRestaurantForm() {
                     ))}
                 </div>
             )}
-             <div className="space-y-2">
-                <Label htmlFor="menuItemName">Dish Name</Label>
-                <Input id="menuItemName" value={currentMenuItem.name} onChange={(e) => setCurrentMenuItem({...currentMenuItem, name: e.target.value})} placeholder="e.g., Classic Burger" />
+            <div className="p-4 border border-dashed rounded-lg space-y-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="menuItemName">Dish Name</Label>
+                    <Input id="menuItemName" value={currentMenuItem.name} onChange={(e) => setCurrentMenuItem({...currentMenuItem, name: e.target.value})} placeholder="e.g., Classic Burger" />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="menuItemDescription">Dish Description</Label>
+                    <Input id="menuItemDescription" value={currentMenuItem.description} onChange={(e) => setCurrentMenuItem({...currentMenuItem, description: e.target.value})} placeholder="e.g., A juicy beef patty..." />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="menuItemPrice">Dish Price</Label>
+                    <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({...currentMenuItem, price: e.target.value})} placeholder="e.g., 12.50" />
+                </div>
+                <Button type="button" variant="outline" onClick={handleAddMenuItem} className="w-full">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Menu Item
+                </Button>
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="menuItemDescription">Dish Description</Label>
-                <Input id="menuItemDescription" value={currentMenuItem.description} onChange={(e) => setCurrentMenuItem({...currentMenuItem, description: e.target.value})} placeholder="e.g., A juicy beef patty..." />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="menuItemPrice">Dish Price</Label>
-                <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({...currentMenuItem, price: e.target.value})} placeholder="e.g., 12.50" />
-            </div>
-            <Button type="button" variant="outline" onClick={handleAddMenuItem} className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Menu Item
-            </Button>
           </div>
 
           <SubmitButton className="w-full font-bold">
