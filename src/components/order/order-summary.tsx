@@ -25,7 +25,6 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
   const grandTotal = participantTotals.reduce((acc, p) => acc + p.total, 0);
 
   return (
-    <div className="sticky top-24">
       <Card className="shadow-lg rounded-2xl">
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center">
@@ -83,6 +82,5 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
           </div>
         </CardFooter>
       </Card>
-    </div>
   );
 }
