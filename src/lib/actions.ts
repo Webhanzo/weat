@@ -139,7 +139,7 @@ export async function addRestaurant(prevState: any, formData: FormData) {
                     name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || '',
-                    category: item.category, // Ensure category is included
+                    category: item.category,
                 }));
             }
         } catch (e: any) {
@@ -200,7 +200,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
                     name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || '',
-                    category: item.category, // Ensure category is included
+                    category: item.category,
                 }));
             }
         } catch (e: any) {
@@ -330,7 +330,7 @@ export async function submitRating(prevState: any, formData: FormData) {
     }
 
     const dishRatings: { [dishId: string]: number } = {};
-    const uniqueDishes = [...new Set(order.participants.flatMap(p => p.items.map(i => i.dish)))];
+    const uniqueDishes = [...new Map(order.participants.flatMap(p => p.items.map(i => [i.dish.id, i.dish]))).values()];
     
     uniqueDishes.forEach(dish => {
         const rating = formData.get(`dish-${dish.id}-rating`);
