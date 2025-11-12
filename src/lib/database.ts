@@ -344,37 +344,42 @@ export async function deleteOrderFromHistory(orderId: string): Promise<void> {
 
 /**
  * Fetches a single group order by its unique 6-character code.
- * This function fetches all orders and filters them in code to avoid needing a database index.
+ * This function searches both active and historical orders.
  * @param code The order code.
  * @returns A promise that resolves to the group order object or undefined if not found.
  */
 export async function getOrderByCode(code: string): Promise<GroupOrder | undefined> {
     const db = getDb();
-    const ordersRef = ref(db, 'groupOrders');
-    const snapshot = await get(ordersRef);
 
-    if (snapshot.exists()) {
-        const ordersObject = snapshot.val();
-        
-        // Find the order that matches the code
-        const orderId = Object.keys(ordersObject).find(key => ordersObject[key].orderCode === code);
+    const searchIn = async (path: string) => {
+        const ordersRef = ref(db, path);
+        const snapshot = await get(ordersRef);
 
-        if (orderId) {
-            const orderData = ordersObject[orderId];
-            
-            // Re-fetch the full restaurant details including the menu
-            if (orderData.restaurant && orderData.restaurant.id) {
-                const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
-                if (fullRestaurant) {
-                    orderData.restaurant = fullRestaurant;
+        if (snapshot.exists()) {
+            const ordersObject = snapshot.val();
+            const orderId = Object.keys(ordersObject).find(key => ordersObject[key].orderCode === code);
+
+            if (orderId) {
+                const orderData = ordersObject[orderId];
+                if (orderData.restaurant && orderData.restaurant.id) {
+                    const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
+                    if (fullRestaurant) {
+                        orderData.restaurant = fullRestaurant;
+                    }
                 }
+                return { id: orderId, ...orderData };
             }
-            
-            return {
-                id: orderId,
-                ...orderData
-            };
         }
+        return undefined;
+    };
+
+    // Search in active orders first
+    let order = await searchIn('groupOrders');
+    if (order) {
+        return order;
     }
-    return undefined;
+
+    // If not found, search in history
+    order = await searchIn('history');
+    return order;
 }
