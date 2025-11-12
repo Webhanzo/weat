@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "restaurants": {
+      ".read": true,
+      ".write": true
+    },
+    "groupOrders": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": "orderCode"
+    },
+    "history": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
