@@ -32,9 +32,9 @@ export async function addRestaurant(restaurantData: Omit<Restaurant, 'id' | 'men
     // Set the main restaurant data (without the menu)
     await set(newRestaurantRef, restaurantData);
 
-    // Set the menu items in a separate path: restaurants/{restaurantId}/menuItems
+    // Set the menu items in a separate path: restaurants/{restaurantId}/menu
     if (menuItems && menuItems.length > 0) {
-        const menuItemsRef = ref(db, `restaurants/${newId}/menuItems`);
+        const menuItemsRef = ref(db, `restaurants/${newId}/menu`);
         const menuItemsWithIds: { [key: string]: Dish } = {};
         
         for (const item of menuItems) {
@@ -62,7 +62,7 @@ export async function getRestaurants(): Promise<Restaurant[]> {
         // Asynchronously fetch menu items for each restaurant
         const restaurantPromises = Object.keys(restaurantsObject).map(async key => {
             const restaurantData = restaurantsObject[key];
-            const menuItemsRef = ref(db, `restaurants/${key}/menuItems`);
+            const menuItemsRef = ref(db, `restaurants/${key}/menu`);
             const menuSnapshot = await get(menuItemsRef);
             const menu = menuSnapshot.exists() ? Object.values(menuSnapshot.val()) as Dish[] : [];
             
@@ -92,7 +92,7 @@ export async function getRestaurantById(id: string): Promise<Restaurant | undefi
         const val = snapshot.val();
 
         // Fetch menu items from the separate path
-        const menuItemsRef = ref(db, `restaurants/${id}/menuItems`);
+        const menuItemsRef = ref(db, `restaurants/${id}/menu`);
         const menuSnapshot = await get(menuItemsRef);
         const menu = menuSnapshot.exists() ? Object.values(menuSnapshot.val()) as Dish[] : [];
 
@@ -268,8 +268,8 @@ export async function updateRestaurant(restaurantId: string, restaurantData: Omi
     const restaurantRef = ref(db, `restaurants/${restaurantId}`);
     await set(restaurantRef, restaurantData);
 
-    // Replace the entire menuItems collection for simplicity
-    const menuItemsRef = ref(db, `restaurants/${restaurantId}/menuItems`);
+    // Replace the entire menu collection for simplicity
+    const menuItemsRef = ref(db, `restaurants/${restaurantId}/menu`);
     
     const menuItemsWithIds: { [key: string]: Dish } = {};
     if (menuItems && menuItems.length > 0) {
@@ -344,31 +344,37 @@ export async function deleteOrderFromHistory(orderId: string): Promise<void> {
 
 /**
  * Fetches a single group order by its unique 6-character code.
+ * This function fetches all orders and filters them in code to avoid needing a database index.
  * @param code The order code.
  * @returns A promise that resolves to the group order object or undefined if not found.
  */
 export async function getOrderByCode(code: string): Promise<GroupOrder | undefined> {
     const db = getDb();
     const ordersRef = ref(db, 'groupOrders');
-    const q = query(ordersRef, orderByChild('orderCode'), equalTo(code));
-    const snapshot = await get(q);
+    const snapshot = await get(ordersRef);
 
     if (snapshot.exists()) {
         const ordersObject = snapshot.val();
-        const orderId = Object.keys(ordersObject)[0];
-        const orderData = ordersObject[orderId];
         
-        if (orderData.restaurant && orderData.restaurant.id) {
-            const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
-            if (fullRestaurant) {
-                orderData.restaurant = fullRestaurant;
+        // Find the order that matches the code
+        const orderId = Object.keys(ordersObject).find(key => ordersObject[key].orderCode === code);
+
+        if (orderId) {
+            const orderData = ordersObject[orderId];
+            
+            // Re-fetch the full restaurant details including the menu
+            if (orderData.restaurant && orderData.restaurant.id) {
+                const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
+                if (fullRestaurant) {
+                    orderData.restaurant = fullRestaurant;
+                }
             }
+            
+            return {
+                id: orderId,
+                ...orderData
+            };
         }
-        
-        return {
-            id: orderId,
-            ...orderData
-        };
     }
     return undefined;
 }
