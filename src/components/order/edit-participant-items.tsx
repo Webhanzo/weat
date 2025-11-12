@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,7 +28,6 @@ import { Label } from '@/components/ui/label';
 import { Pencil, Trash2, Minus, Plus } from 'lucide-react';
 import type { Participant, OrderItem } from '@/lib/types';
 import { updateParticipantItems, removeParticipant } from '@/lib/actions';
-import { useFormState } from 'react-dom';
 import { SubmitButton } from '../ui/submit-button';
 
 type EditParticipantItemsProps = {
@@ -45,7 +44,7 @@ const initialState = {
 export default function EditParticipantItems({ orderId, participant }: EditParticipantItemsProps) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<OrderItem[]>(JSON.parse(JSON.stringify(participant.items)));
-  const [state, formAction] = useFormState(updateParticipantItems, initialState);
+  const [state, formAction] = useActionState(updateParticipantItems, initialState);
 
   const handleQuantityChange = (dishId: string, delta: number) => {
     setItems(currentItems => {
