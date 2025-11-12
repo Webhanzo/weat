@@ -247,7 +247,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
                               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="" disabled>First select restaurant categories</SelectItem>
+                            <SelectItem value="placeholder" disabled>First select restaurant categories</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
