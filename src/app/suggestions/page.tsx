@@ -9,7 +9,7 @@ import { SubmitButton } from '@/components/ui/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Utensils, Search, CircleDollarSign, Info } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 type SearchState = {
     results?: DishSearchResult[];
