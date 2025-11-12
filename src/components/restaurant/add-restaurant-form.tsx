@@ -22,7 +22,7 @@ const initialState = {
   type: "",
 };
 
-const categories = [
+const initialCategories = [
   "Shawerma",
   "Broasted",
   "Snacks",
@@ -46,6 +46,9 @@ export default function AddRestaurantForm() {
 
   const [menuItems, setMenuItems] = useState<Dish[]>([]);
   const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: '' });
+  
+  const [categories, setCategories] = useState<string[]>(initialCategories);
+  const [newCategory, setNewCategory] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
 
@@ -92,6 +95,13 @@ export default function AddRestaurantForm() {
     );
   }
   
+  const handleAddNewCategory = () => {
+    if (newCategory && !categories.includes(newCategory)) {
+        setCategories(prev => [...prev, newCategory]);
+        setSelectedCategories(prev => [...prev, newCategory]);
+        setNewCategory("");
+    }
+  }
 
   return (
     <Card className="shadow-2xl rounded-2xl">
@@ -145,6 +155,16 @@ export default function AddRestaurantForm() {
                       <Label htmlFor={`cat-${category}`} className="font-normal flex-1 cursor-pointer">{category}</Label>
                     </div>
                   ))}
+                </div>
+                 <div className="p-2 border-t space-y-2">
+                    <div className="flex gap-2">
+                        <Input 
+                            placeholder="Add new category..." 
+                            value={newCategory} 
+                            onChange={(e) => setNewCategory(e.target.value)} 
+                        />
+                        <Button type="button" onClick={handleAddNewCategory}>Add</Button>
+                    </div>
                 </div>
               </PopoverContent>
             </Popover>
