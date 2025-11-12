@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import RatingDisplay from "@/components/rating/rating-display";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -54,6 +55,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                     Order created on {format(new Date(order.createdAt), "PPP 'at' p")}
                   </CardDescription>
                 </div>
+                 <RatingDisplay rating={order.restaurant.rating} ratingCount={order.restaurant.ratingCount} />
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -76,9 +78,12 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                       <p className="font-bold text-lg text-primary">{participant.name}</p>
                       <ul className="mt-2 space-y-1 text-sm pl-4 list-disc list-inside">
                         {participant.items.map((item, index) => (
-                          <li key={index} className="flex justify-between">
+                          <li key={index} className="flex justify-between items-center">
                             <span>{item.quantity}x {item.dish.name}</span>
-                            <span className="font-mono">${(item.dish.price * item.quantity).toFixed(2)}</span>
+                            <div className="flex items-center gap-4">
+                                <RatingDisplay rating={item.dish.rating} ratingCount={item.dish.ratingCount} />
+                                <span className="font-mono">${(item.dish.price * item.quantity).toFixed(2)}</span>
+                            </div>
                           </li>
                         ))}
                       </ul>

@@ -1,15 +1,34 @@
 'use client';
+import { useActionState, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GroupOrder } from "@/lib/types";
-import { Users, Truck, Wallet, Utensils, Clock } from "lucide-react";
+import { Users, Truck, Wallet, Utensils, Clock, Star } from "lucide-react";
 import { format } from 'date-fns';
+import { submitRating } from '@/lib/actions';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { SubmitButton } from '../ui/submit-button';
+import RatingInput from '../rating/rating-input';
+import { useToast } from '@/hooks/use-toast';
 
 type PastOrderDetailsProps = {
   order: GroupOrder;
 };
 
+const ratingInitialState = {
+    error: undefined,
+    success: false,
+}
+
 export default function PastOrderDetails({ order }: PastOrderDetailsProps) {
+  const [ratingState, formAction] = useActionState(submitRating, ratingInitialState);
+  const { toast } = useToast();
+  // For simplicity, we'll ask the user for their name to check if they've rated.
+  // In a real app, this would come from an auth context.
+  const [raterName, setRaterName] = useState('');
+  const hasRated = raterName && order.ratings && !!order.ratings[raterName];
+  const canRate = !hasRated && raterName !== '';
+
   const participants = order.participants || [];
   const deliveryFee = order.restaurant.deliveryFee || 0;
   const participantCount = participants.length > 0 ? participants.length : 1;
@@ -23,6 +42,22 @@ export default function PastOrderDetails({ order }: PastOrderDetailsProps) {
 
   const grandTotal = participantTotals.reduce((acc, p) => acc + p.total, 0);
   const totalItems = participants.reduce((acc, p) => acc + p.items.reduce((itemAcc, item) => itemAcc + item.quantity, 0), 0);
+
+  const uniqueDishes = [...new Map(order.participants.flatMap(p => p.items.map(i => [i.dish.id, i.dish]))).values()];
+
+  if (ratingState.success) {
+     toast({
+        title: "Rating Submitted!",
+        description: "Thank you for your feedback.",
+    });
+  } else if (ratingState.error) {
+     toast({
+        title: "Rating Error",
+        description: ratingState.error,
+        variant: 'destructive',
+    });
+  }
+
 
   return (
     <Card className="w-full shadow-2xl rounded-2xl animate-in fade-in-50 duration-500">
@@ -113,8 +148,61 @@ export default function PastOrderDetails({ order }: PastOrderDetailsProps) {
                     </div>
                  </div>
             </div>
-
         </CardContent>
+
+        <CardFooter className="flex-col items-start space-y-4 p-6 bg-muted/50 rounded-b-2xl border-t">
+            <h3 className="font-headline text-2xl flex items-center"><Star className="h-6 w-6 mr-3 text-amber-400" />Rate Your Order</h3>
+            
+            {!raterName && (
+                 <div className="w-full space-y-2">
+                    <p className="text-sm text-muted-foreground">Please enter your name (as it appeared in the order) to rate.</p>
+                    <input 
+                        value={raterName}
+                        onChange={(e) => setRaterName(e.target.value)}
+                        placeholder="Enter your name"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+                    />
+                 </div>
+            )}
+            
+            {hasRated && (
+                <Alert variant="default" className="w-full border-green-500 bg-green-500/10">
+                    <Star className="h-4 w-4 text-green-500" />
+                    <AlertTitle>Thanks for rating!</AlertTitle>
+                    <AlertDescription>You have already submitted your feedback for this order.</AlertDescription>
+                </Alert>
+            )}
+
+            {canRate && (
+                <form action={formAction} className="w-full space-y-6">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <input type="hidden" name="restaurantId" value={order.restaurant.id} />
+                    <input type="hidden" name="userId" value={raterName} />
+                    
+                    <div className="space-y-4 p-4 border rounded-lg bg-background">
+                         <h4 className="font-bold">Rate the Restaurant: {order.restaurant.name}</h4>
+                         <RatingInput name="restaurantRating" />
+                    </div>
+
+                    {uniqueDishes.length > 0 && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-background">
+                            <h4 className="font-bold">Rate the Dishes</h4>
+                            {uniqueDishes.map(dish => (
+                                <div key={dish.id} className="space-y-2">
+                                    <p>{dish.name}</p>
+                                    <RatingInput name={`dish-${dish.id}-rating`} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    
+                    <SubmitButton className="w-full font-bold">
+                        <Star className="mr-2 h-4 w-4" />
+                        Submit Ratings
+                    </SubmitButton>
+                </form>
+            )}
+        </CardFooter>
     </Card>
   );
 }

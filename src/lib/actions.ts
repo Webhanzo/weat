@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder, getOrderByCode } from "./database";
-import type { GroupOrder, Participant, Restaurant, Dish } from "./types";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder, getOrderByCode, getDb } from "./database";
+import type { GroupOrder, Participant, Restaurant, Dish, Rating } from "./types";
+import { ref, set, update } from "firebase/database";
 
 function generateOrderCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -305,4 +306,89 @@ export async function findOrderByCode(prevState: any, formData: FormData) {
     } else {
         return { error: `No order found with code "${orderCode}".` };
     }
+}
+
+export async function submitRating(prevState: any, formData: FormData) {
+    const orderId = formData.get('orderId') as string;
+    const restaurantId = formData.get('restaurantId') as string;
+    const userId = formData.get('userId') as string;
+    const restaurantRating = parseInt(formData.get('restaurantRating') as string, 10);
+
+    if (!orderId || !userId || !restaurantId || !restaurantRating) {
+        return { error: "Missing required rating information." };
+    }
+
+    const order = await getGroupOrderById(orderId);
+    if (!order) {
+        return { error: "Order not found." };
+    }
+
+    if(order.ratings && order.ratings[userId]) {
+        return { error: "You have already rated this order." };
+    }
+
+    const dishRatings: { [dishId: string]: number } = {};
+    const uniqueDishes = [...new Set(order.participants.flatMap(p => p.items.map(i => i.dish)))];
+    
+    uniqueDishes.forEach(dish => {
+        const rating = formData.get(`dish-${dish.id}-rating`);
+        if (rating) {
+            dishRatings[dish.id] = parseInt(rating as string, 10);
+        }
+    });
+
+    const newRating: Rating = {
+        userId,
+        restaurantRating,
+        dishRatings
+    };
+
+    const db = getDb();
+    
+    // --- Atomically update order with new rating ---
+    const orderRatingsRef = ref(db, `history/${orderId}/ratings/${userId}`);
+    await set(orderRatingsRef, newRating);
+
+
+    // --- Update restaurant average rating ---
+    const restaurant = await getRestaurantById(restaurantId);
+    if(restaurant) {
+        const restaurantRef = ref(db, `restaurants/${restaurantId}`);
+        const currentRating = restaurant.rating || 0;
+        const ratingCount = restaurant.ratingCount || 0;
+        const newRatingCount = ratingCount + 1;
+        const newAverage = (currentRating * ratingCount + restaurantRating) / newRatingCount;
+        
+        await update(restaurantRef, {
+            rating: newAverage,
+            ratingCount: newRatingCount
+        });
+    }
+
+
+    // --- Update dish average ratings ---
+    for (const dishId in dishRatings) {
+        const dishRating = dishRatings[dishId];
+        const dish = restaurant?.menu.find(d => d.id === dishId);
+
+        if (dish) {
+            const dishRef = ref(db, `restaurants/${restaurantId}/menu/${dishId}`);
+            const currentRating = dish.rating || 0;
+            const ratingCount = dish.ratingCount || 0;
+            const newRatingCount = ratingCount + 1;
+            const newAverage = (currentRating * ratingCount + dishRating) / newRatingCount;
+
+            await update(dishRef, {
+                rating: newAverage,
+                ratingCount: newRatingCount
+            });
+        }
+    }
+
+
+    revalidatePath(`/orders/history`);
+    revalidatePath(`/orders/create`);
+    revalidatePath(`/orders/${orderId}`);
+
+    return { success: true };
 }

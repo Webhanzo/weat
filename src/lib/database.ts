@@ -8,7 +8,7 @@ import { initializeFirebase } from "@/firebase";
  * Initializes a connection to the Firebase Realtime Database.
  * This is where we would configure emulator settings for local development.
  */
-function getDb() {
+export function getDb() {
     const { database } = initializeFirebase();
     return database;
 }

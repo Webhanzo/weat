@@ -3,6 +3,8 @@ export type Dish = {
   name: string;
   description: string;
   price: number;
+  rating?: number;
+  ratingCount?: number;
 };
 
 export type Restaurant = {
@@ -13,6 +15,8 @@ export type Restaurant = {
   deliveryFee: number;
   menu: Dish[];
   category: string[];
+  rating?: number;
+  ratingCount?: number;
 };
 
 export type OrderItem = {
@@ -26,6 +30,12 @@ export type Participant = {
   items: OrderItem[];
 };
 
+export type Rating = {
+  userId: string; // Could be participant name for simplicity in this app
+  restaurantRating: number;
+  dishRatings: { [dishId: string]: number };
+}
+
 export type GroupOrder = {
   id: string;
   restaurant: Restaurant;
@@ -33,4 +43,5 @@ export type GroupOrder = {
   createdAt: string;
   status: 'active' | 'finalized' | 'cancelled';
   orderCode: string;
+  ratings?: { [userId: string]: Rating };
 };

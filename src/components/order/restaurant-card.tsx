@@ -6,6 +6,7 @@ import type { Restaurant } from "@/lib/types";
 import { createOrder } from "@/lib/actions";
 import { Utensils, CircleDollarSign, Pencil } from "lucide-react";
 import { SubmitButton } from "../ui/submit-button";
+import RatingDisplay from "../rating/rating-display";
 
 type RestaurantCardProps = {
   restaurant: Restaurant;
@@ -26,7 +27,10 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex-grow p-6">
-        <CardTitle className="font-headline text-2xl mb-2">{restaurant.name}</CardTitle>
+        <div className="flex justify-between items-start">
+            <CardTitle className="font-headline text-2xl mb-2">{restaurant.name}</CardTitle>
+            <RatingDisplay rating={restaurant.rating} ratingCount={restaurant.ratingCount} />
+        </div>
         <CardDescription>{restaurant.description}</CardDescription>
         <div className="mt-4 flex items-center space-x-4 text-sm text-muted-foreground">
             <div className="flex items-center">
