@@ -287,21 +287,19 @@ export async function deleteOrder(formData: FormData) {
     redirect('/orders/history');
 }
 
-export async function findOrderByCode(formData: FormData) {
+export async function findOrderByCode(prevState: any, formData: FormData) {
     const orderCode = formData.get('orderCode') as string;
 
     if (!orderCode) {
-        // Handle error: code is empty
-        return;
+        return { error: 'Please enter an order code.' };
     }
     
     const order = await getOrderByCode(orderCode.toUpperCase());
 
     if (order) {
-        redirect(`/orders/${order.id}`);
+        // This is a workaround to make sure the object is serializable for the client component
+        return { order: JSON.parse(JSON.stringify(order)) };
     } else {
-        // Handle error: order not found, maybe show a toast or a message
-        // For now, we redirect to home with an error query param
-        redirect(`/?error=orderNotFound`);
+        return { error: `No order found with code "${orderCode}".` };
     }
 }
