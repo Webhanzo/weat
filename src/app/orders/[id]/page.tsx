@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip"
 import RatingDisplay from "@/components/rating/rating-display";
 import EditParticipantItems from "@/components/order/edit-participant-items";
+import type { Dish } from "@/lib/types";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -82,6 +83,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                           <EditParticipantItems 
                             orderId={order.id} 
                             participant={participant} 
+                            menu={order.restaurant.menu || []}
                           />
                         )}
                       </div>

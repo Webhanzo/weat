@@ -26,13 +26,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pencil, Trash2, Minus, Plus } from 'lucide-react';
-import type { Participant, OrderItem } from '@/lib/types';
+import type { Participant, OrderItem, Dish } from '@/lib/types';
 import { updateParticipantItems, removeParticipant } from '@/lib/actions';
 import { SubmitButton } from '../ui/submit-button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type EditParticipantItemsProps = {
   orderId: string;
   participant: Participant;
+  menu: Dish[];
 };
 
 const initialState = {
@@ -41,7 +43,7 @@ const initialState = {
 };
 
 
-export default function EditParticipantItems({ orderId, participant }: EditParticipantItemsProps) {
+export default function EditParticipantItems({ orderId, participant, menu }: EditParticipantItemsProps) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<OrderItem[]>(JSON.parse(JSON.stringify(participant.items)));
   const [state, formAction] = useActionState(updateParticipantItems, initialState);
@@ -65,6 +67,35 @@ export default function EditParticipantItems({ orderId, participant }: EditParti
     });
   };
 
+  const handleDishChange = (oldDishId: string, newDishId: string) => {
+    const newDish = menu.find(d => d.id === newDishId);
+    if (!newDish) return;
+
+    setItems(currentItems => {
+      // Check if the new dish is already in the order for this participant
+      const existingItemIndex = currentItems.findIndex(item => item.dish.id === newDishId);
+      const oldItem = currentItems.find(item => item.dish.id === oldDishId);
+
+      if (existingItemIndex > -1) {
+        // If it exists, merge quantities and remove the old item
+        return currentItems.map((item, index) => {
+          if (index === existingItemIndex) {
+            return { ...item, quantity: item.quantity + (oldItem?.quantity || 0) };
+          }
+          return item;
+        }).filter(item => item.dish.id !== oldDishId);
+      } else {
+        // If it doesn't exist, just replace the old dish with the new one
+        return currentItems.map(item => {
+          if (item.dish.id === oldDishId) {
+            return { ...item, dish: newDish };
+          }
+          return item;
+        });
+      }
+    });
+  }
+
   const removeParticipantAction = removeParticipant.bind(null, orderId, participant.id);
 
   return (
@@ -75,7 +106,7 @@ export default function EditParticipantItems({ orderId, participant }: EditParti
           <span className="sr-only">Edit Items for {participant.name}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Order for {participant.name}</DialogTitle>
           <DialogDescription>
@@ -87,14 +118,29 @@ export default function EditParticipantItems({ orderId, participant }: EditParti
             <input type="hidden" name="participantId" value={participant.id} />
             <input type="hidden" name="items" value={JSON.stringify(items)} />
 
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-80 overflow-y-auto pr-4">
                 {items.map((item, index) => (
-                    <div key={item.dish.id} className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor={`item-${index}`} className="col-span-2">
-                            {item.dish.name}
-                        </Label>
-                        <div className="col-span-2 flex items-center justify-end gap-2">
-                             <Button type="button" size="icon" variant="outline" className="h-8 w-8" onClick={() => handleQuantityChange(item.dish.id, -1)}>
+                    <div key={item.dish.id} className="space-y-2">
+                      <div className="grid grid-cols-6 items-center gap-2">
+                        <div className="col-span-4">
+                          <Select 
+                            value={item.dish.id} 
+                            onValueChange={(newDishId) => handleDishChange(item.dish.id, newDishId)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a dish" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {menu.map(dish => (
+                                <SelectItem key={dish.id} value={dish.id}>
+                                  {dish.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2 flex items-center justify-end gap-1">
+                             <Button type="button" size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => handleQuantityChange(item.dish.id, -1)}>
                                 <Minus className="h-4 w-4" />
                             </Button>
                             <Input
@@ -102,16 +148,18 @@ export default function EditParticipantItems({ orderId, participant }: EditParti
                                 type="number"
                                 readOnly
                                 value={item.quantity}
-                                className="w-16 h-8 text-center"
+                                className="w-12 h-8 text-center"
                             />
-                             <Button type="button" size="icon" variant="outline" className="h-8 w-8" onClick={() => handleQuantityChange(item.dish.id, 1)}>
+                             <Button type="button" size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => handleQuantityChange(item.dish.id, 1)}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-1">{item.dish.description}</p>
                     </div>
                 ))}
                 {items.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center col-span-4">
+                    <p className="text-sm text-muted-foreground text-center col-span-4 py-8">
                         All items have been removed. You can remove this participant from the order.
                     </p>
                 )}
