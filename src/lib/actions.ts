@@ -139,7 +139,7 @@ export async function addRestaurant(prevState: any, formData: FormData) {
                     name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || '',
-                    category: item.category,
+                    category: item.category, // Ensure category is included
                 }));
             }
         } catch (e: any) {
@@ -200,7 +200,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
                     name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || '',
-                    category: item.category,
+                    category: item.category, // Ensure category is included
                 }));
             }
         } catch (e: any) {

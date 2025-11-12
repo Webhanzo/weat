@@ -277,7 +277,9 @@ export async function updateRestaurant(restaurantId: string, restaurantData: Omi
             // Use existing ID or generate a new one if it's a new item (e.g., starts with 'new-')
             const newItemId = item.id && !item.id.startsWith('new-') ? item.id : push(menuItemsRef).key;
             if (newItemId) {
-                menuItemsWithIds[newItemId] = { ...item, id: newItemId };
+                // Ensure the final object doesn't have a nested ID if it already exists
+                const finalItem = { ...item, id: newItemId };
+                menuItemsWithIds[newItemId] = finalItem;
             }
         }
     }
