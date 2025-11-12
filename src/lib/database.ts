@@ -1,4 +1,4 @@
-import { getDatabase, ref, get, set, child, push, remove } from "firebase/database";
+import { getDatabase, ref, get, set, child, push, remove, query, orderByChild, equalTo } from "firebase/database";
 import type { Restaurant, GroupOrder, Dish } from './types';
 import { initializeFirebase } from "@/firebase";
 
@@ -340,4 +340,35 @@ export async function archiveOrder(orderId: string): Promise<void> {
 export async function deleteOrderFromHistory(orderId: string): Promise<void> {
     const db = getDb();
     await remove(ref(db, `history/${orderId}`));
+}
+
+/**
+ * Fetches a single group order by its unique 6-character code.
+ * @param code The order code.
+ * @returns A promise that resolves to the group order object or undefined if not found.
+ */
+export async function getOrderByCode(code: string): Promise<GroupOrder | undefined> {
+    const db = getDb();
+    const ordersRef = ref(db, 'groupOrders');
+    const q = query(ordersRef, orderByChild('orderCode'), equalTo(code));
+    const snapshot = await get(q);
+
+    if (snapshot.exists()) {
+        const ordersObject = snapshot.val();
+        const orderId = Object.keys(ordersObject)[0];
+        const orderData = ordersObject[orderId];
+        
+        if (orderData.restaurant && orderData.restaurant.id) {
+            const fullRestaurant = await getRestaurantById(orderData.restaurant.id);
+            if (fullRestaurant) {
+                orderData.restaurant = fullRestaurant;
+            }
+        }
+        
+        return {
+            id: orderId,
+            ...orderData
+        };
+    }
+    return undefined;
 }

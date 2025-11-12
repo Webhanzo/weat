@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { getGroupOrders } from "@/lib/database";
-import { PlusCircle, Lightbulb, ArrowRight, Users, Utensils, Clock } from "lucide-react";
+import { PlusCircle, Lightbulb, ArrowRight, Users, Utensils, Clock, Search } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
+import { Input } from "@/components/ui/input";
+import { findOrderByCode } from "@/lib/actions";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export default async function Home() {
   const allOrders = await getGroupOrders();
@@ -37,8 +40,17 @@ export default async function Home() {
                   </Button>
                 </div>
               </div>
-               <div className="hidden lg:flex items-center justify-center">
-                 <Utensils className="h-48 w-48 text-primary/20" />
+               <div className="flex flex-col items-center justify-center space-y-6 rounded-lg bg-card p-8 shadow-lg">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold font-headline">Find an Order</h3>
+                    <p className="text-muted-foreground">Enter the 6-digit code to join an existing order.</p>
+                  </div>
+                  <form action={findOrderByCode} className="w-full max-w-sm space-y-2">
+                    <Input name="orderCode" placeholder="e.g., AB12CD" className="text-center tracking-widest font-mono uppercase" maxLength={6} />
+                    <SubmitButton className="w-full font-bold">
+                      <Search className="mr-2 h-4 w-4" /> Find Order
+                    </SubmitButton>
+                  </form>
               </div>
             </div>
           </div>

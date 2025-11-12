@@ -2,8 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder } from "./database";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder, getOrderByCode } from "./database";
 import type { GroupOrder, Participant, Restaurant, Dish } from "./types";
+
+function generateOrderCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
 
 export async function createOrder(formData: FormData) {
   const restaurantId = formData.get("restaurantId") as string;
@@ -23,6 +32,7 @@ export async function createOrder(formData: FormData) {
       participants: [],
       createdAt: new Date().toISOString(),
       status: "active",
+      orderCode: generateOrderCode(),
     };
 
     newOrderId = await addGroupOrder(newOrder);
@@ -275,4 +285,23 @@ export async function deleteOrder(formData: FormData) {
     revalidatePath('/orders/history');
     revalidatePath('/');
     redirect('/orders/history');
+}
+
+export async function findOrderByCode(formData: FormData) {
+    const orderCode = formData.get('orderCode') as string;
+
+    if (!orderCode) {
+        // Handle error: code is empty
+        return;
+    }
+    
+    const order = await getOrderByCode(orderCode.toUpperCase());
+
+    if (order) {
+        redirect(`/orders/${order.id}`);
+    } else {
+        // Handle error: order not found, maybe show a toast or a message
+        // For now, we redirect to home with an error query param
+        redirect(`/?error=orderNotFound`);
+    }
 }

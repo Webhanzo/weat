@@ -32,4 +32,5 @@ export type GroupOrder = {
   participants: Participant[];
   createdAt: string;
   status: 'active' | 'finalized' | 'cancelled';
+  orderCode: string;
 };

@@ -5,11 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import AddToOrderForm from "@/components/order/add-to-order-form";
 import OrderSummary from "@/components/order/order-summary";
 import { Button } from "@/components/ui/button";
-import { Utensils, User, Clock, Pencil, CheckCircle, Info } from "lucide-react";
+import { Utensils, User, Clock, Pencil, CheckCircle, Info, Copy, Hash } from "lucide-react";
 import { format } from 'date-fns';
 import FinalizeOrderButton from "@/components/order/finalize-order-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import DeleteOrderButton from "@/components/order/delete-order-button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -27,6 +33,15 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
+       {order.orderCode && isModifiable && (
+         <Alert className="mb-8 border-accent">
+            <Hash className="h-4 w-4" />
+            <AlertTitle className="font-bold">Share this Order!</AlertTitle>
+            <AlertDescription>
+                Others can join this order using the code: <strong className="font-mono text-lg tracking-widest">{order.orderCode}</strong>
+            </AlertDescription>
+         </Alert>
+       )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <Card className="overflow-hidden shadow-lg rounded-2xl">
