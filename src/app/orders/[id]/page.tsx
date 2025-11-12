@@ -19,6 +19,7 @@ import {
 import RatingDisplay from "@/components/rating/rating-display";
 import EditParticipantItems from "@/components/order/edit-participant-items";
 import type { Dish } from "@/lib/types";
+import CollatedOrderList from "@/components/order/collated-order-list";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -124,6 +125,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
         </div>
         <div className="lg:col-span-1 space-y-6">
           <OrderSummary order={order} />
+          <CollatedOrderList order={order} />
             <Card>
               <CardHeader>
                 <CardTitle>Order Actions</CardTitle>
