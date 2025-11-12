@@ -116,7 +116,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                 {isModifiable && (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Once finalized, no more items can be added.
+                      Once finalized, no more items can be added, and the order can be archived.
                     </p>
                     <FinalizeOrderButton orderId={order.id} />
                   </>
@@ -126,7 +126,6 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                         This order is finalized. You can now move it to your history.
                     </p>
                 )}
-                {/* This button will now archive the order */}
                 <DeleteOrderButton orderId={order.id} isFinalized={isFinalized} />
               </CardContent>
             </Card>

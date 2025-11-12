@@ -17,19 +17,16 @@ import { deleteOrder } from "@/lib/actions";
 import { Archive, Trash2 } from "lucide-react";
 
 export default function DeleteOrderButton({ orderId, isFinalized }: { orderId: string, isFinalized: boolean }) {
-  const isArchived = !isFinalized;
-  const buttonText = isFinalized ? "Archive Order" : "Delete Order";
-  const dialogTitle = isFinalized ? "Are you sure you want to archive?" : "Are you absolutely sure?";
-  const dialogDescription = isFinalized 
-    ? "This will move the order to your history. You can view it there later."
-    : "This action cannot be undone. This will permanently delete this order and remove its data from our servers.";
-  const confirmText = isFinalized ? "Yes, archive it" : "Yes, delete it";
+  const buttonText = "Archive Order";
+  const dialogTitle = "Are you sure you want to archive?";
+  const dialogDescription = "This will move the order to your history. You can view it there later by searching its code.";
+  const confirmText = "Yes, archive it";
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" className="w-full font-bold">
-            {isFinalized ? <Archive className="mr-2 h-4 w-4" /> : <Trash2 className="mr-2 h-4 w-4" />}
+        <Button variant="destructive" className="w-full font-bold" disabled={!isFinalized}>
+            <Archive className="mr-2 h-4 w-4" />
             {buttonText}
         </Button>
       </AlertDialogTrigger>
