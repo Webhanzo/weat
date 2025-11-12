@@ -54,14 +54,6 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                     Order created on {format(new Date(order.createdAt), "PPP 'at' p")}
                   </CardDescription>
                 </div>
-                {isModifiable && (
-                  <Button asChild variant="outline" size="icon">
-                    <Link href={`/restaurants/${order.restaurant.id}/edit`}>
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit Restaurant</span>
-                    </Link>
-                  </Button>
-                )}
               </div>
             </CardHeader>
             <CardContent className="p-6">

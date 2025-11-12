@@ -1,9 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Restaurant } from "@/lib/types";
 import { createOrder } from "@/lib/actions";
-import { Utensils, CircleDollarSign } from "lucide-react";
+import { Utensils, CircleDollarSign, Pencil } from "lucide-react";
 import { SubmitButton } from "../ui/submit-button";
 
 type RestaurantCardProps = {
@@ -38,13 +39,19 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
             </div>
         </div>
       </CardContent>
-      <CardFooter className="p-6 bg-muted/50">
+      <CardFooter className="p-6 bg-muted/50 flex gap-2">
         <form action={createOrder} className="w-full">
           <input type="hidden" name="restaurantId" value={restaurant.id} />
           <SubmitButton className="w-full font-bold">
             Start Group Order
           </SubmitButton>
         </form>
+         <Button asChild variant="outline" size="icon" className="shrink-0">
+            <Link href={`/restaurants/${restaurant.id}/edit`}>
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">Edit Restaurant</span>
+            </Link>
+          </Button>
       </CardFooter>
     </Card>
   );
