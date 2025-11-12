@@ -1,15 +1,16 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { addItemToOrder } from '@/lib/actions';
-import type { GroupOrder } from '@/lib/types';
+import type { GroupOrder, Dish } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { PlusCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type AddToOrderFormProps = {
     order: GroupOrder;
@@ -24,6 +25,12 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
   const [state, formAction] = useActionState(addItemToOrder, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+
+  const handleDishChange = (dishId: string) => {
+    const dish = order.restaurant.menu?.find(d => d.id === dishId) || null;
+    setSelectedDish(dish);
+  };
 
   useEffect(() => {
     if (state.message) {
@@ -33,6 +40,7 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
             description: state.message,
         });
         formRef.current?.reset();
+        setSelectedDish(null);
       } else {
          toast({
             title: 'Error',
@@ -61,7 +69,7 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div className="space-y-2">
               <Label htmlFor="dishId">Menu Item</Label>
-              <Select name="dishId" required>
+              <Select name="dishId" required onValueChange={handleDishChange}>
                 <SelectTrigger id="dishId">
                   <SelectValue placeholder="Select a dish to add" />
                 </SelectTrigger>
@@ -73,6 +81,11 @@ export default function AddToOrderForm({ order }: AddToOrderFormProps) {
                   ))}
                 </SelectContent>
               </Select>
+               {selectedDish?.description && (
+                <p className="text-sm text-muted-foreground pt-1 animate-in fade-in-50">
+                  {selectedDish.description}
+                </p>
+              )}
             </div>
              <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
