@@ -138,7 +138,8 @@ export async function addRestaurant(prevState: any, formData: FormData) {
                 menu = parsedMenu.map(item => ({
                     name: item.name,
                     price: Number(item.price) || 0,
-                    description: item.description || ''
+                    description: item.description || '',
+                    category: item.category,
                 }));
             }
         } catch (e: any) {
@@ -198,7 +199,8 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
                     id: item.id,
                     name: item.name,
                     price: Number(item.price) || 0,
-                    description: item.description || ''
+                    description: item.description || '',
+                    category: item.category,
                 }));
             }
         } catch (e: any) {

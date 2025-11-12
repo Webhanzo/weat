@@ -15,6 +15,7 @@ import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensil
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import DeleteRestaurantButton from "./delete-restaurant-button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const initialState = {
   message: "",
@@ -40,14 +41,16 @@ type EditRestaurantFormProps = {
   restaurant: Restaurant;
 };
 
+type CurrentMenuItem = Omit<Dish, 'id'|'price'> & {id?:string, price:string}
+
 export default function EditRestaurantForm({ restaurant }: EditRestaurantFormProps) {
   const [state, formAction] = useActionState(updateRestaurant, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Dish[]>(restaurant.menu || []);
-  const [currentMenuItem, setCurrentMenuItem] = useState({ id: '', name: '', description: '', price: '' });
-  const [isEditing, setIsEditing] = useState(false);
+  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: '' });
+  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[]);
 
 
@@ -69,18 +72,18 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   }, [state, toast]);
 
   const resetDishForm = () => {
-    setCurrentMenuItem({ id: '', name: '', description: '', price: '' });
-    setIsEditing(false);
+    setCurrentMenuItem({ name: '', description: '', price: '', category: '' });
+    setIsEditing(null);
   }
 
   const handleAddOrUpdateMenuItem = () => {
     const priceNumber = parseFloat(currentMenuItem.price);
-    if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0) {
+    if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0 && currentMenuItem.category) {
       if(isEditing) {
         // Update existing item
         setMenuItems(menuItems.map(item => 
-          item.id === currentMenuItem.id 
-            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description, price: priceNumber }
+          item.id === isEditing
+            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description, price: priceNumber, category: currentMenuItem.category }
             : item
         ));
         toast({ title: 'Dish Updated', description: `${currentMenuItem.name} has been updated.`});
@@ -91,6 +94,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
           name: currentMenuItem.name,
           description: currentMenuItem.description || '',
           price: priceNumber,
+          category: currentMenuItem.category
         };
         setMenuItems([...menuItems, newItem]);
         toast({ title: 'Dish Added', description: `${newItem.name} has been added to the menu.`});
@@ -99,25 +103,25 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
     } else {
       toast({
         title: 'Missing dish details',
-        description: 'Please provide a valid name and a positive price for the menu item.',
+        description: 'Please provide a valid name, category, and a positive price for the menu item.',
         variant: 'destructive',
       });
     }
   };
 
   const handleEditClick = (dish: Dish) => {
-      setIsEditing(true);
+      setIsEditing(dish.id);
       setCurrentMenuItem({
-        id: dish.id,
         name: dish.name,
         description: dish.description || '',
-        price: dish.price.toString()
+        price: dish.price.toString(),
+        category: dish.category,
       });
   }
 
   const handleRemoveMenuItem = (id: string) => {
     setMenuItems(menuItems.filter(item => item.id !== id));
-     if(isEditing && currentMenuItem.id === id) {
+     if(isEditing && isEditing === id) {
         resetDishForm();
     }
   };
@@ -222,9 +226,32 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
                   <Label htmlFor="menuItemDescription">Dish Description</Label>
                   <Input id="menuItemDescription" value={currentMenuItem.description} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, description: e.target.value })} placeholder="e.g., A juicy beef patty..." />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="menuItemPrice">Dish Price</Label>
-                  <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, price: e.target.value })} placeholder="e.g., 12.50" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="menuItemPrice">Dish Price</Label>
+                    <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({ ...currentMenuItem, price: e.target.value })} placeholder="e.g., 12.50" />
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="menuItemCategory">Dish Category</Label>
+                      <Select 
+                        value={currentMenuItem.category} 
+                        onValueChange={(value) => setCurrentMenuItem({...currentMenuItem, category: value})}
+                        disabled={selectedCategories.length === 0}
+                      >
+                        <SelectTrigger id="menuItemCategory">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           {selectedCategories.length > 0 ? (
+                            selectedCategories.map(cat => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>First select restaurant categories</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                     <Button type="button" variant="outline" onClick={handleAddOrUpdateMenuItem} className="w-full">

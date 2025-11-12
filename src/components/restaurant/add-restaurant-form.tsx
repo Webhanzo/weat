@@ -14,6 +14,8 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils, Tag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const initialState = {
   message: "",
@@ -35,13 +37,15 @@ const categories = [
   "Sea food",
 ];
 
+type CurrentMenuItem = Omit<Dish, 'id' | 'price'> & { price: string };
+
 export default function AddRestaurantForm() {
   const [state, formAction] = useActionState(addRestaurant, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Dish[]>([]);
-  const [currentMenuItem, setCurrentMenuItem] = useState({ name: '', description: '', price: '' });
+  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: '' });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
 
@@ -57,19 +61,20 @@ export default function AddRestaurantForm() {
 
   const handleAddMenuItem = () => {
     const priceNumber = parseFloat(currentMenuItem.price);
-    if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0) {
+    if (currentMenuItem.name && !isNaN(priceNumber) && priceNumber > 0 && currentMenuItem.category) {
       const newItem: Dish = {
         id: `new-${Date.now()}-${Math.random()}`,
         name: currentMenuItem.name,
         description: currentMenuItem.description || '',
         price: priceNumber,
+        category: currentMenuItem.category
       };
       setMenuItems([...menuItems, newItem]);
-      setCurrentMenuItem({ name: '', description: '', price: '' }); // Reset the form
+      setCurrentMenuItem({ name: '', description: '', price: '', category: '' }); // Reset the form
     } else {
         toast({
             title: 'Missing dish details',
-            description: 'Please provide a valid name and a positive price for the menu item.',
+            description: 'Please provide a valid name, category, and a positive price for the menu item.',
             variant: 'destructive',
         });
     }
@@ -176,9 +181,32 @@ export default function AddRestaurantForm() {
                     <Label htmlFor="menuItemDescription">Dish Description</Label>
                     <Input id="menuItemDescription" value={currentMenuItem.description} onChange={(e) => setCurrentMenuItem({...currentMenuItem, description: e.target.value})} placeholder="e.g., A juicy beef patty..." />
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="menuItemPrice">Dish Price</Label>
-                    <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({...currentMenuItem, price: e.target.value})} placeholder="e.g., 12.50" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="menuItemPrice">Dish Price</Label>
+                      <Input id="menuItemPrice" type="number" value={currentMenuItem.price} onChange={(e) => setCurrentMenuItem({...currentMenuItem, price: e.target.value})} placeholder="e.g., 12.50" />
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="menuItemCategory">Dish Category</Label>
+                      <Select 
+                        value={currentMenuItem.category} 
+                        onValueChange={(value) => setCurrentMenuItem({...currentMenuItem, category: value})}
+                        disabled={selectedCategories.length === 0}
+                      >
+                        <SelectTrigger id="menuItemCategory">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectedCategories.length > 0 ? (
+                            selectedCategories.map(cat => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>First select restaurant categories</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                  </div>
                 </div>
                 <Button type="button" variant="outline" onClick={handleAddMenuItem} className="w-full">
                     <PlusCircle className="mr-2 h-4 w-4" />

@@ -3,6 +3,7 @@ export type Dish = {
   name: string;
   description: string;
   price: number;
+  category: string; // Added category for the dish
   rating?: number;
   ratingCount?: number;
 };
