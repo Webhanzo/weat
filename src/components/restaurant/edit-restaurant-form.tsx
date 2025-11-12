@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag, Pencil, X } from "lucide-react";
+import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag, Pencil, X, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import DeleteRestaurantButton from "./delete-restaurant-button";
@@ -41,7 +41,7 @@ type EditRestaurantFormProps = {
   restaurant: Restaurant;
 };
 
-type CurrentMenuItem = Omit<Dish, 'id'|'price'> & {id?:string, price:string}
+type CurrentMenuItem = Omit<Dish, 'id'|'price'|'category'> & {id?:string, price:string, category:string | undefined}
 
 export default function EditRestaurantForm({ restaurant }: EditRestaurantFormProps) {
   const [state, formAction] = useActionState(updateRestaurant, initialState);
@@ -49,13 +49,15 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Dish[]>(restaurant.menu || []);
-  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: '' });
+  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: undefined });
   const [isEditing, setIsEditing] = useState<string | null>(null);
 
   const allInitialCategories = Array.from(new Set([...initialCategories, ...(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[])]));
   const [categories, setCategories] = useState<string[]>(allInitialCategories);
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[]);
+  
+  const [editingCategory, setEditingCategory] = useState<{ oldName: string; newName: string } | null>(null);
 
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   }, [state, toast]);
 
   const resetDishForm = () => {
-    setCurrentMenuItem({ name: '', description: '', price: '', category: '' });
+    setCurrentMenuItem({ name: '', description: '', price: '', category: undefined });
     setIsEditing(null);
   }
 
@@ -87,7 +89,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
         // Update existing item
         setMenuItems(menuItems.map(item => 
           item.id === isEditing
-            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description, price: priceNumber, category: currentMenuItem.category }
+            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description || '', price: priceNumber, category: currentMenuItem.category || '' }
             : item
         ));
         toast({ title: 'Dish Updated', description: `${currentMenuItem.name} has been updated.`});
@@ -98,7 +100,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
           name: currentMenuItem.name,
           description: currentMenuItem.description || '',
           price: priceNumber,
-          category: currentMenuItem.category
+          category: currentMenuItem.category || ''
         };
         setMenuItems([...menuItems, newItem]);
         toast({ title: 'Dish Added', description: `${newItem.name} has been added to the menu.`});
@@ -140,10 +142,58 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
 
   const handleAddNewCategory = () => {
     if (newCategory && !categories.includes(newCategory)) {
-        setCategories(prev => [...prev, newCategory]);
+        setCategories(prev => [...prev, newCategory].sort());
         setSelectedCategories(prev => [...prev, newCategory]);
         setNewCategory("");
     }
+  }
+
+  const handleStartEditingCategory = (category: string) => {
+    setEditingCategory({ oldName: category, newName: category });
+  };
+  
+  const handleCancelEditingCategory = () => {
+    setEditingCategory(null);
+  };
+
+  const handleUpdateCategory = () => {
+    if (!editingCategory || !editingCategory.newName.trim() || editingCategory.newName === editingCategory.oldName) {
+      setEditingCategory(null);
+      return;
+    }
+
+    setCategories(prev =>
+      prev.map(c => (c === editingCategory.oldName ? editingCategory.newName : c)).sort()
+    );
+
+    setSelectedCategories(prev =>
+      prev.map(c => (c === editingCategory.oldName ? editingCategory.newName : c))
+    );
+    
+    setMenuItems(prev => 
+      prev.map(item => item.category === editingCategory.oldName ? {...item, category: editingCategory.newName} : item)
+    );
+    
+    if(currentMenuItem.category === editingCategory.oldName) {
+      setCurrentMenuItem(prev => ({...prev, category: editingCategory.newName}));
+    }
+
+    setEditingCategory(null);
+  };
+  
+  const handleDeleteCategory = (categoryToDelete: string) => {
+      setCategories(prev => prev.filter(c => c !== categoryToDelete));
+      setSelectedCategories(prev => prev.filter(c => c !== categoryToDelete));
+      // Optional: decide what to do with dishes that had this category
+      setMenuItems(prev => prev.filter(item => item.category !== categoryToDelete));
+      if(currentMenuItem.category === categoryToDelete) {
+        setCurrentMenuItem(prev => ({...prev, category: undefined}));
+      }
+      toast({
+        title: "Category Deleted",
+        description: `Category "${categoryToDelete}" and its associated dishes have been removed.`,
+        variant: "destructive"
+      })
   }
 
 
@@ -191,13 +241,39 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                 <div className="space-y-1 p-2">
                   {categories.map(category => (
-                    <div key={category} className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted">
-                       <Checkbox
-                          id={`cat-edit-${category}`}
-                          checked={selectedCategories.includes(category)}
-                          onCheckedChange={() => handleCategoryChange(category)}
-                        />
-                      <Label htmlFor={`cat-edit-${category}`} className="font-normal flex-1 cursor-pointer">{category}</Label>
+                    <div key={category} className="flex items-center justify-between space-x-2 p-1 rounded-md hover:bg-muted/50">
+                       {editingCategory?.oldName === category ? (
+                         <div className="flex items-center gap-1 w-full">
+                           <Input 
+                              value={editingCategory.newName}
+                              onChange={(e) => setEditingCategory({...editingCategory, newName: e.target.value})}
+                              className="h-8"
+                              autoFocus
+                              onKeyDown={(e) => e.key === 'Enter' && handleUpdateCategory()}
+                           />
+                           <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={handleUpdateCategory}><Check className="h-4 w-4"/></Button>
+                           <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={handleCancelEditingCategory}><X className="h-4 w-4"/></Button>
+                         </div>
+                       ) : (
+                         <>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id={`cat-edit-${category}`}
+                                checked={selectedCategories.includes(category)}
+                                onCheckedChange={() => handleCategoryChange(category)}
+                              />
+                              <Label htmlFor={`cat-edit-${category}`} className="font-normal flex-1 cursor-pointer">{category}</Label>
+                            </div>
+                           <div className="flex items-center">
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleStartEditingCategory(category)}>
+                                   <Pencil className="h-3 w-3" />
+                               </Button>
+                               <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteCategory(category)}>
+                                   <Trash2 className="h-3 w-3" />
+                               </Button>
+                           </div>
+                         </>
+                       )}
                     </div>
                   ))}
                 </div>
