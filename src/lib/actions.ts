@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder, getOrderByCode, getDb } from "./database";
-import type { GroupOrder, Participant, Restaurant, Dish, Rating } from "./types";
+import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder, getOrderByCode, getDb, getRestaurants } from "./database";
+import type { GroupOrder, Participant, Restaurant, Dish, Rating, DishSearchResult } from "./types";
 import { ref, set, update } from "firebase/database";
 
 function generateOrderCode(): string {
@@ -393,4 +393,38 @@ export async function submitRating(prevState: any, formData: FormData) {
     revalidatePath(`/orders/${orderId}`);
 
     return { success: true };
+}
+
+export async function searchDishes(prevState: any, formData: FormData): Promise<{ results: DishSearchResult[], error?: string, query: string }> {
+    const query = formData.get('dishName') as string;
+
+    if (!query) {
+        return { error: 'Please enter a dish name to search.', query: '', results: [] };
+    }
+
+    try {
+        const restaurants = await getRestaurants();
+        const results: DishSearchResult[] = [];
+
+        for (const restaurant of restaurants) {
+            if (restaurant.menu) {
+                for (const dish of restaurant.menu) {
+                    if (dish.name.toLowerCase().includes(query.toLowerCase())) {
+                        results.push({
+                            dish,
+                            restaurantName: restaurant.name,
+                            restaurantId: restaurant.id,
+                            deliveryFee: restaurant.deliveryFee,
+                        });
+                    }
+                }
+            }
+        }
+        
+        revalidatePath('/suggestions');
+        return { results: JSON.parse(JSON.stringify(results)), query };
+
+    } catch (e: any) {
+        return { error: `An error occurred during the search: ${e.message}`, query, results: [] };
+    }
 }

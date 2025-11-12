@@ -46,3 +46,10 @@ export type GroupOrder = {
   orderCode: string;
   ratings?: { [userId: string]: Rating };
 };
+
+export type DishSearchResult = {
+  dish: Dish;
+  restaurantName: string;
+  restaurantId: string;
+  deliveryFee: number;
+}
