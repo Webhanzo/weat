@@ -6,8 +6,8 @@
     },
     "groupOrders": {
       ".read": true,
-      ".write": true,
-      ".indexOn": "orderCode"
+      "read": true,
+      ".write": true
     },
     "history": {
       ".read": true,
