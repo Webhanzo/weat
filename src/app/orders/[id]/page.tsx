@@ -38,7 +38,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
             <Hash className="h-4 w-4" />
             <AlertTitle className="font-bold">Share this Order!</AlertTitle>
             <AlertDescription>
-                Others can join this order using the code: <strong className="font-mono text-lg tracking-widest">{order.orderCode}</strong>
+                Others can join this order using the code: <strong className="font-mono text-lg tracking-widest text-primary">{order.orderCode}</strong>
             </AlertDescription>
          </Alert>
        )}
