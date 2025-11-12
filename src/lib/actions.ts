@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getRestaurantById, getGroupOrderById, addGroupOrder, updateGroupOrder, addRestaurant as addRestaurantToDb, updateRestaurant as updateRestaurantInDb, deleteRestaurant as deleteRestaurantFromDb, archiveOrder, getOrderByCode, getDb, getRestaurants } from "./database";
-import type { GroupOrder, Participant, Restaurant, Dish, Rating, DishSearchResult } from "./types";
+import type { GroupOrder, Participant, Restaurant, Dish, Rating, DishSearchResult, OrderItem } from "./types";
 import { ref, set, update } from "firebase/database";
 
 function generateOrderCode(): string {
@@ -427,4 +427,72 @@ export async function searchDishes(prevState: any, formData: FormData): Promise<
     } catch (e: any) {
         return { error: `An error occurred during the search: ${e.message}`, query, results: [] };
     }
+}
+
+export async function updateParticipantItems(prevState: any, formData: FormData) {
+    const orderId = formData.get('orderId') as string;
+    const participantId = formData.get('participantId') as string;
+    const itemsData = formData.get('items') as string;
+
+    if (!orderId || !participantId || !itemsData) {
+        return { message: "Missing required fields.", type: "error" };
+    }
+
+    const order = await getGroupOrderById(orderId);
+    if (!order) {
+        return { message: "Order not found.", type: "error" };
+    }
+
+    if (order.status !== 'active') {
+        return { message: "This order is finalized and can no longer be modified.", type: "error" };
+    }
+
+    let updatedItems: OrderItem[];
+    try {
+        updatedItems = JSON.parse(itemsData);
+    } catch(e) {
+        return { message: "Invalid items format.", type: "error" };
+    }
+
+    const participantIndex = order.participants.findIndex(p => p.id === participantId);
+    if (participantIndex === -1) {
+        return { message: "Participant not found.", type: "error" };
+    }
+    
+    // Update items or remove participant if items are empty
+    if(updatedItems.length > 0) {
+        order.participants[participantIndex].items = updatedItems;
+    } else {
+        // If the updated item list is empty, remove the participant.
+        order.participants.splice(participantIndex, 1);
+    }
+
+    await updateGroupOrder(order.id, order);
+    
+    revalidatePath(`/orders/${orderId}`);
+    return { message: "Order updated successfully.", type: "success" };
+}
+
+
+export async function removeParticipant(orderId: string, participantId: string) {
+    if (!orderId || !participantId) {
+        return { message: "Missing required fields.", type: "error" };
+    }
+
+    const order = await getGroupOrderById(orderId);
+    if (!order) {
+        return { message: "Order not found.", type: "error" };
+    }
+
+    if (order.status !== 'active') {
+        return { message: "This order is finalized and can no longer be modified.", type: "error" };
+    }
+
+    const updatedParticipants = order.participants.filter(p => p.id !== participantId);
+    order.participants = updatedParticipants;
+
+    await updateGroupOrder(order.id, order);
+
+    revalidatePath(`/orders/${orderId}`);
+    return { message: "Participant removed.", type: "success" };
 }

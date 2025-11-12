@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import RatingDisplay from "@/components/rating/rating-display";
+import EditParticipantItems from "@/components/order/edit-participant-items";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -75,7 +76,15 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                 <ul className="space-y-4">
                   {participants.map(participant => (
                     <li key={participant.id} className="p-4 bg-background rounded-lg border">
-                      <p className="font-bold text-lg text-primary">{participant.name}</p>
+                      <div className="flex justify-between items-center">
+                        <p className="font-bold text-lg text-primary">{participant.name}</p>
+                        {isModifiable && (
+                          <EditParticipantItems 
+                            orderId={order.id} 
+                            participant={participant} 
+                          />
+                        )}
+                      </div>
                       <ul className="mt-2 space-y-1 text-sm pl-4 list-disc list-inside">
                         {participant.items.map((item, index) => (
                           <li key={index} className="flex justify-between items-center">
