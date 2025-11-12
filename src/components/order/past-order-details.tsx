@@ -1,5 +1,5 @@
 'use client';
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GroupOrder } from "@/lib/types";
@@ -45,18 +45,21 @@ export default function PastOrderDetails({ order }: PastOrderDetailsProps) {
 
   const uniqueDishes = [...new Map(order.participants.flatMap(p => p.items.map(i => [i.dish.id, i.dish]))).values()];
 
-  if (ratingState.success) {
-     toast({
-        title: "Rating Submitted!",
-        description: "Thank you for your feedback.",
-    });
-  } else if (ratingState.error) {
-     toast({
-        title: "Rating Error",
-        description: ratingState.error,
-        variant: 'destructive',
-    });
-  }
+  useEffect(() => {
+    if (ratingState.success) {
+      toast({
+          title: "Rating Submitted!",
+          description: "Thank you for your feedback.",
+      });
+    } else if (ratingState.error) {
+      toast({
+          title: "Rating Error",
+          description: ratingState.error,
+          variant: 'destructive',
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ratingState]);
 
 
   return (
@@ -206,3 +209,5 @@ export default function PastOrderDetails({ order }: PastOrderDetailsProps) {
     </Card>
   );
 }
+
+    
