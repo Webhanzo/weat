@@ -290,13 +290,16 @@ export async function deleteOrder(formData: FormData) {
 export async function findOrderByCode(prevState: any, formData: FormData) {
     const orderCode = formData.get('orderCode') as string;
 
-    if (!orderCode) {
+    if (!orderCode || orderCode.length < 1) {
         return { error: 'Please enter an order code.' };
     }
     
     const order = await getOrderByCode(orderCode.toUpperCase());
 
     if (order) {
+        if (prevState === 'REDIRECT') {
+            return redirect(`/orders/${order.id}`);
+        }
         // This is a workaround to make sure the object is serializable for the client component
         return { order: JSON.parse(JSON.stringify(order)) };
     } else {

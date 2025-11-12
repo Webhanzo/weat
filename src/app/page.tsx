@@ -6,6 +6,9 @@ import { findOrderByCode } from "@/lib/actions";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 export default async function Home() {
+  
+  const findAction = findOrderByCode.bind(null, 'REDIRECT');
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1">
@@ -39,8 +42,8 @@ export default async function Home() {
                     <h3 className="text-2xl font-bold font-headline">Find an Order</h3>
                     <p className="text-muted-foreground">Enter the 6-digit code to join an existing order.</p>
                   </div>
-                  <form action={findOrderByCode} className="w-full max-w-sm space-y-2">
-                    <Input name="orderCode" placeholder="e.g., AB12CD" className="text-center tracking-widest font-mono uppercase" maxLength={6} />
+                  <form action={findAction} className="w-full max-w-sm space-y-2">
+                    <Input name="orderCode" placeholder="e.g., AB12CD" className="text-center tracking-widest font-mono uppercase" maxLength={6} required />
                     <SubmitButton className="w-full font-bold">
                       <Search className="mr-2 h-4 w-4" /> Find Order
                     </SubmitButton>
