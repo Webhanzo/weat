@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag, Pencil, X, Check } from "lucide-react";
+import { PlusCircle, Trash2, BookMarked, Image as ImageIcon, DollarSign, Utensils, Save, Tag, Pencil, X, Check, Phone, Flame } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import DeleteRestaurantButton from "./delete-restaurant-button";
@@ -41,7 +41,7 @@ type EditRestaurantFormProps = {
   restaurant: Restaurant;
 };
 
-type CurrentMenuItem = Omit<Dish, 'id'|'price'|'category'> & {id?:string, price:string, category:string | undefined}
+type CurrentMenuItem = Omit<Dish, 'id'|'price'|'category'|'hasSpicyOption'> & {id?:string, price:string, category:string | undefined, hasSpicyOption: boolean }
 
 export default function EditRestaurantForm({ restaurant }: EditRestaurantFormProps) {
   const [state, formAction] = useActionState(updateRestaurant, initialState);
@@ -49,7 +49,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Dish[]>(restaurant.menu || []);
-  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: undefined });
+  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: undefined, hasSpicyOption: false });
   const [isEditing, setIsEditing] = useState<string | null>(null);
 
   const allInitialCategories = Array.from(new Set([...initialCategories, ...(Array.isArray(restaurant.category) ? restaurant.category : [restaurant.category].filter(Boolean) as string[])]));
@@ -78,7 +78,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
   }, [state, toast]);
 
   const resetDishForm = () => {
-    setCurrentMenuItem({ name: '', description: '', price: '', category: undefined });
+    setCurrentMenuItem({ name: '', description: '', price: '', category: undefined, hasSpicyOption: false });
     setIsEditing(null);
   }
 
@@ -89,7 +89,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
         // Update existing item
         setMenuItems(menuItems.map(item => 
           item.id === isEditing
-            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description || '', price: priceNumber, category: currentMenuItem.category || '' }
+            ? { ...item, name: currentMenuItem.name, description: currentMenuItem.description || '', price: priceNumber, category: currentMenuItem.category || '', hasSpicyOption: currentMenuItem.hasSpicyOption }
             : item
         ));
         toast({ title: 'Dish Updated', description: `${currentMenuItem.name} has been updated.`});
@@ -100,7 +100,8 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
           name: currentMenuItem.name,
           description: currentMenuItem.description || '',
           price: priceNumber,
-          category: currentMenuItem.category || ''
+          category: currentMenuItem.category || '',
+          hasSpicyOption: currentMenuItem.hasSpicyOption,
         };
         setMenuItems([...menuItems, newItem]);
         toast({ title: 'Dish Added', description: `${newItem.name} has been added to the menu.`});
@@ -122,6 +123,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
         description: dish.description || '',
         price: dish.price.toString(),
         category: dish.category,
+        hasSpicyOption: dish.hasSpicyOption || false,
       });
   }
 
@@ -229,6 +231,11 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
               <Input id="deliveryFee" name="deliveryFee" type="number" step="0.01" defaultValue={restaurant.deliveryFee} required />
             </div>
           </div>
+          
+            <div className="space-y-2">
+                <Label htmlFor="phoneNumber" className="flex items-center"><Phone className="h-4 w-4 mr-2" />Phone Number</Label>
+                <Input id="phoneNumber" name="phoneNumber" type="tel" defaultValue={restaurant.phoneNumber} placeholder="e.g., 0791234567" />
+            </div>
 
           <div className="space-y-2">
             <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
@@ -301,7 +308,7 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
                 {menuItems.map((item) => (
                   <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md gap-2">
                     <div>
-                      <p className="font-semibold">{item.name} - ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
+                      <p className="font-semibold">{item.name} - ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price} {item.hasSpicyOption && <Flame className="inline h-4 w-4 ml-1 text-red-500" />}</p>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
@@ -351,6 +358,14 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
                         </SelectContent>
                       </Select>
                   </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id="editHasSpicyOption"
+                        checked={currentMenuItem.hasSpicyOption}
+                        onCheckedChange={(checked) => setCurrentMenuItem({ ...currentMenuItem, hasSpicyOption: !!checked })}
+                    />
+                    <Label htmlFor="editHasSpicyOption" className="flex items-center gap-2">Offer a spicy version of this dish <Flame className="h-4 w-4" /></Label>
                 </div>
                 <div className="flex gap-2">
                     <Button type="button" variant="outline" onClick={handleAddOrUpdateMenuItem} className="w-full">

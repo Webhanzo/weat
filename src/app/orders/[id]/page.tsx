@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import AddToOrderForm from "@/components/order/add-to-order-form";
 import OrderSummary from "@/components/order/order-summary";
 import { Button } from "@/components/ui/button";
-import { Utensils, User, Clock, Pencil, CheckCircle, Info, Copy, Hash } from "lucide-react";
+import { Utensils, User, Clock, Pencil, CheckCircle, Info, Copy, Hash, Flame } from "lucide-react";
 import { format } from 'date-fns';
 import FinalizeOrderButton from "@/components/order/finalize-order-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -91,7 +91,12 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                       <ul className="mt-2 space-y-1 text-sm pl-4 list-disc list-inside">
                         {participant.items.map((item, index) => (
                           <li key={index} className="flex justify-between items-center">
-                            <span>{item.quantity}x {item.dish.name}</span>
+                            <span>
+                                {item.quantity}x {item.dish.name}
+                                {item.preference === 'spicy' && (
+                                    <span className="ml-2 text-red-500 text-xs font-semibold inline-flex items-center">(Spicy <Flame className="h-3 w-3 inline" />)</span>
+                                )}
+                            </span>
                             <div className="flex items-center gap-4">
                                 <RatingDisplay rating={item.dish.rating} ratingCount={item.dish.ratingCount} />
                                 <span className="font-mono">${(item.dish.price * item.quantity).toFixed(2)}</span>

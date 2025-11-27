@@ -48,11 +48,21 @@ export async function createOrder(formData: FormData) {
 export async function addItemToOrder(prevState: any, formData: FormData) {
     const orderId = formData.get("orderId") as string;
     const userName = formData.get("userName") as string;
-    const dishId = formData.get("dishId") as string;
-    const quantity = parseInt(formData.get("quantity") as string, 10);
+    const itemsData = formData.get("items") as string;
 
-    if (!orderId || !userName || !dishId || !quantity) {
+
+    if (!orderId || !userName || !itemsData) {
         return { message: "Missing required fields.", type: "error" };
+    }
+
+    let itemsToAdd: { dishId: string, quantity: number, preference?: 'spicy' | 'regular' }[];
+    try {
+        itemsToAdd = JSON.parse(itemsData);
+        if (itemsToAdd.length === 0) {
+            return { message: "No items to add.", type: "error" };
+        }
+    } catch(e) {
+         return { message: "Invalid items format.", type: "error" };
     }
 
     const order = await getGroupOrderById(orderId);
@@ -62,11 +72,6 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
 
     if (order.status !== 'active') {
         return { message: "This order is finalized and can no longer be modified.", type: "error"};
-    }
-
-    const dish = order.restaurant.menu?.find(d => d.id === dishId);
-    if (!dish) {
-        return { message: "Dish not found.", type: "error" };
     }
 
     let participants = order.participants || [];
@@ -81,12 +86,21 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         participants.push(participant);
     }
     
-    const existingItem = participant.items.find(item => item.dish.id === dishId);
+    for (const item of itemsToAdd) {
+        const dish = order.restaurant.menu?.find(d => d.id === item.dishId);
+        if (!dish) {
+            console.warn(`Dish with id ${item.dishId} not found, skipping.`);
+            continue;
+        }
 
-    if (existingItem) {
-        existingItem.quantity += quantity;
-    } else {
-        participant.items.push({ dish, quantity });
+        // Find existing item with the same dish and preference
+        const existingItem = participant.items.find(i => i.dish.id === item.dishId && i.preference === item.preference);
+
+        if (existingItem) {
+            existingItem.quantity += item.quantity;
+        } else {
+            participant.items.push({ dish, quantity: item.quantity, preference: item.preference });
+        }
     }
 
     // Since we mutated participant, we need to update the participants array
@@ -104,7 +118,7 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
     await updateGroupOrder(order.id, updatedOrder);
     
     revalidatePath(`/orders/${orderId}`);
-    return { message: `${quantity}x ${dish.name} added for ${participant.name}.`, type: "success" };
+    return { message: `${itemsToAdd.length} item(s) added for ${participant.name}.`, type: "success" };
 }
 
 export async function addRestaurant(prevState: any, formData: FormData) {
@@ -112,6 +126,7 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
     const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
+    const phoneNumber = formData.get('phoneNumber') as string;
     const categoryData = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
@@ -139,7 +154,8 @@ export async function addRestaurant(prevState: any, formData: FormData) {
                     name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || '',
-                    category: item.category || '', // Ensure category exists
+                    category: item.category || '',
+                    hasSpicyOption: item.hasSpicyOption || false,
                 }));
             }
         } catch (e: any) {
@@ -153,6 +169,7 @@ export async function addRestaurant(prevState: any, formData: FormData) {
         image,
         deliveryFee,
         category,
+        phoneNumber,
     };
 
     try {
@@ -172,6 +189,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
     const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
+    const phoneNumber = formData.get('phoneNumber') as string;
     const categoryData = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
@@ -200,7 +218,8 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
                     name: item.name,
                     price: Number(item.price) || 0,
                     description: item.description || '',
-                    category: item.category || '', // Ensure category exists, default to empty string if not
+                    category: item.category || '',
+                    hasSpicyOption: item.hasSpicyOption || false,
                 }));
             }
         } catch (e: any) {
@@ -214,6 +233,7 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
         image,
         deliveryFee,
         category,
+        phoneNumber,
     };
 
     try {

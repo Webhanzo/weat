@@ -3,7 +3,8 @@ export type Dish = {
   name: string;
   description: string;
   price: number;
-  category: string; // Added category for the dish
+  category: string;
+  hasSpicyOption?: boolean; // Can this dish be made spicy?
   rating?: number;
   ratingCount?: number;
 };
@@ -16,6 +17,7 @@ export type Restaurant = {
   deliveryFee: number;
   menu: Dish[];
   category: string[];
+  phoneNumber?: string;
   rating?: number;
   ratingCount?: number;
 };
@@ -23,6 +25,7 @@ export type Restaurant = {
 export type OrderItem = {
   dish: Dish;
   quantity: number;
+  preference?: 'spicy' | 'regular'; // User's choice
 };
 
 export type Participant = {

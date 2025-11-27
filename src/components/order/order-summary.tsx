@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GroupOrder } from "@/lib/types";
-import { Users, Truck, Wallet, Info, AtSign } from "lucide-react";
+import { Users, Truck, Wallet, Info, AtSign, Phone } from "lucide-react";
 import Image from "next/image";
 
 type OrderSummaryProps = {
@@ -75,6 +75,15 @@ export default function OrderSummary({ order }: OrderSummaryProps) {
               </div>
               <span>${deliveryFee.toFixed(2)}</span>
           </div>
+            {order.restaurant.phoneNumber && (
+                 <div className="w-full flex justify-between items-center text-sm">
+                    <div className="flex items-center text-muted-foreground">
+                        <Phone className="h-4 w-4 mr-2" />
+                        <span>Restaurant Phone</span>
+                    </div>
+                    <a href={`tel:${order.restaurant.phoneNumber}`} className="font-mono hover:underline">{order.restaurant.phoneNumber}</a>
+                 </div>
+            )}
           <Separator className="my-2"/>
            <div className="w-full flex justify-between items-center text-lg font-bold">
               <span>Grand Total</span>

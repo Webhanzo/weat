@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils, Tag, Pencil, Check, X } from "lucide-react";
+import { PlusCircle, Trash2, BookMarked, Image as ImageIcon,DollarSign, Utensils, Tag, Pencil, Check, X, Phone, Flame } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,7 +37,7 @@ const initialCategories = [
   "Sea food",
 ];
 
-type CurrentMenuItem = Omit<Dish, 'id' | 'price' | 'category'> & { price: string; category: string | undefined };
+type CurrentMenuItem = Omit<Dish, 'id' | 'price' | 'category' | 'hasSpicyOption'> & { price: string; category: string | undefined, hasSpicyOption: boolean };
 
 export default function AddRestaurantForm() {
   const [state, formAction] = useActionState(addRestaurant, initialState);
@@ -45,7 +45,7 @@ export default function AddRestaurantForm() {
   const formRef = useRef<HTMLFormElement>(null);
 
   const [menuItems, setMenuItems] = useState<Dish[]>([]);
-  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: undefined });
+  const [currentMenuItem, setCurrentMenuItem] = useState<CurrentMenuItem>({ name: '', description: '', price: '', category: undefined, hasSpicyOption: false });
   
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const [newCategory, setNewCategory] = useState("");
@@ -73,9 +73,10 @@ export default function AddRestaurantForm() {
         description: currentMenuItem.description || '',
         price: priceNumber,
         category: currentMenuItem.category || '',
+        hasSpicyOption: currentMenuItem.hasSpicyOption,
       };
       setMenuItems([...menuItems, newItem]);
-      setCurrentMenuItem({ name: '', description: '', price: '', category: undefined }); // Reset the form
+      setCurrentMenuItem({ name: '', description: '', price: '', category: undefined, hasSpicyOption: false }); // Reset the form
     } else {
         toast({
             title: 'Missing dish details',
@@ -185,6 +186,11 @@ export default function AddRestaurantForm() {
             </div>
            </div>
 
+            <div className="space-y-2">
+                <Label htmlFor="phoneNumber" className="flex items-center"><Phone className="h-4 w-4 mr-2" />Phone Number</Label>
+                <Input id="phoneNumber" name="phoneNumber" type="tel" placeholder="e.g., 0791234567" />
+            </div>
+
           <div className="space-y-2">
             <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
             <Popover>
@@ -258,7 +264,7 @@ export default function AddRestaurantForm() {
                     {menuItems.map((item) => (
                         <div key={item.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
                            <div>
-                             <p className="font-semibold">{item.name} - ${item.price.toFixed(2)}</p>
+                             <p className="font-semibold">{item.name} - ${item.price.toFixed(2)} {item.hasSpicyOption && <Flame className="inline h-4 w-4 ml-1 text-red-500" />}</p>
                              <p className="text-sm text-muted-foreground">{item.description}</p>
                            </div>
                             <Button variant="ghost" size="icon" type="button" onClick={() => handleRemoveMenuItem(item.id!)}>
@@ -303,6 +309,14 @@ export default function AddRestaurantForm() {
                         </SelectContent>
                       </Select>
                   </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id="hasSpicyOption"
+                        checked={currentMenuItem.hasSpicyOption}
+                        onCheckedChange={(checked) => setCurrentMenuItem({ ...currentMenuItem, hasSpicyOption: !!checked })}
+                    />
+                    <Label htmlFor="hasSpicyOption" className="flex items-center gap-2">Offer a spicy version of this dish <Flame className="h-4 w-4" /></Label>
                 </div>
                 <Button type="button" variant="outline" onClick={handleAddMenuItem} className="w-full">
                     <PlusCircle className="mr-2 h-4 w-4" />
