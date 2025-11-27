@@ -99,7 +99,11 @@ export async function addItemToOrder(prevState: any, formData: FormData) {
         if (existingItem) {
             existingItem.quantity += item.quantity;
         } else {
-            participant.items.push({ dish, quantity: item.quantity, preference: item.preference });
+            const newItem: OrderItem = { dish, quantity: item.quantity };
+            if (item.preference) {
+                newItem.preference = item.preference;
+            }
+            participant.items.push(newItem);
         }
     }
 
