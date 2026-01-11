@@ -30,7 +30,7 @@ export default function PastOrderDetails({ order }: PastOrderDetailsProps) {
   const canRate = !hasRated && raterName !== '';
 
   const participants = order.participants || [];
-  const deliveryFee = order.restaurant.deliveryFee || 0;
+  const deliveryFee = order.deliveryFee || 0;
   const participantCount = participants.length > 0 ? participants.length : 1;
   const deliveryFeePerPerson = deliveryFee / participantCount;
 

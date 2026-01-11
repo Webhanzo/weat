@@ -33,10 +33,6 @@ export default function RestaurantCard({ restaurant }: RestaurantCardProps) {
         </div>
         <CardDescription>{restaurant.description}</CardDescription>
         <div className="mt-4 flex items-center space-x-4 text-sm text-muted-foreground">
-            <div className="flex items-center">
-                <CircleDollarSign className="h-4 w-4 mr-1.5" />
-                Delivery: ${restaurant.deliveryFee.toFixed(2)}
-            </div>
              <div className="flex items-center">
                 <Utensils className="h-4 w-4 mr-1.5" />
                 {restaurant.menu?.length || 0} menu items

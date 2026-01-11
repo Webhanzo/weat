@@ -227,16 +227,11 @@ export default function EditRestaurantForm({ restaurant }: EditRestaurantFormPro
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deliveryFee" className="flex items-center"><DollarSign className="h-4 w-4 mr-2" />Delivery Fee</Label>
-              <Input id="deliveryFee" name="deliveryFee" type="number" step="0.01" defaultValue={restaurant.deliveryFee} required />
-            </div>
-          </div>
-          
-            <div className="space-y-2">
                 <Label htmlFor="phoneNumber" className="flex items-center"><Phone className="h-4 w-4 mr-2" />Phone Number</Label>
                 <Input id="phoneNumber" name="phoneNumber" type="tel" defaultValue={restaurant.phoneNumber} placeholder="e.g., 0791234567" />
             </div>
-
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>
             <Popover>

@@ -181,15 +181,11 @@ export default function AddRestaurantForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deliveryFee" className="flex items-center"><DollarSign className="h-4 w-4 mr-2" />Delivery Fee</Label>
-              <Input id="deliveryFee" name="deliveryFee" type="number" step="0.01" placeholder="e.g., 5.00" required />
-            </div>
-           </div>
-
-            <div className="space-y-2">
                 <Label htmlFor="phoneNumber" className="flex items-center"><Phone className="h-4 w-4 mr-2" />Phone Number</Label>
                 <Input id="phoneNumber" name="phoneNumber" type="tel" placeholder="e.g., 0791234567" />
             </div>
+           </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="category" className="flex items-center"><Tag className="h-4 w-4 mr-2" />Category</Label>

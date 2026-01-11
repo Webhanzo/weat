@@ -14,7 +14,6 @@ export type Restaurant = {
   name: string;
   description: string;
   image: string;
-  deliveryFee: number;
   menu: Dish[];
   category: string[];
   phoneNumber?: string;
@@ -48,11 +47,11 @@ export type GroupOrder = {
   status: 'active' | 'finalized' | 'cancelled';
   orderCode: string;
   ratings?: { [userId: string]: Rating };
+  deliveryFee: number;
 };
 
 export type DishSearchResult = {
   dish: Dish;
   restaurantName: string;
   restaurantId: string;
-  deliveryFee: number;
 }

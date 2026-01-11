@@ -68,7 +68,7 @@ export default function SuggestionsPage() {
                     </h2>
                 )}
                 
-                {state.results && state.results.map(({ dish, restaurantName, restaurantId, deliveryFee }) => (
+                {state.results && state.results.map(({ dish, restaurantName, restaurantId }) => (
                     <Card key={`${restaurantId}-${dish.id}`} className="overflow-hidden">
                         <CardHeader>
                             <div className="flex justify-between items-start">
@@ -90,11 +90,7 @@ export default function SuggestionsPage() {
                                 </div>
                             </CardContent>
                         )}
-                        <CardFooter className="bg-muted/50 p-4 flex justify-between items-center text-sm">
-                             <div className="flex items-center">
-                                <CircleDollarSign className="h-4 w-4 mr-1.5" />
-                                <span>Delivery Fee: ${deliveryFee.toFixed(2)}</span>
-                            </div>
+                        <CardFooter className="bg-muted/50 p-4 flex justify-end items-center text-sm">
                             <Button asChild size="sm">
                                 <Link href={`/orders/create`}>Start an Order</Link>
                             </Button>

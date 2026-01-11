@@ -34,6 +34,7 @@ export async function createOrder(formData: FormData) {
       createdAt: new Date().toISOString(),
       status: "active",
       orderCode: generateOrderCode(),
+      deliveryFee: 0,
     };
 
     newOrderId = await addGroupOrder(newOrder);
@@ -129,12 +130,11 @@ export async function addRestaurant(prevState: any, formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
-    const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
     const phoneNumber = formData.get('phoneNumber') as string;
     const categoryData = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
-    if (!name || !description || !image || isNaN(deliveryFee) || !categoryData) {
+    if (!name || !description || !image || !categoryData) {
         return { message: "Please fill all required fields for the restaurant.", type: 'error' };
     }
 
@@ -171,7 +171,6 @@ export async function addRestaurant(prevState: any, formData: FormData) {
         name,
         description,
         image,
-        deliveryFee,
         category,
         phoneNumber,
     };
@@ -192,12 +191,11 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const image = formData.get('image') as string;
-    const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
     const phoneNumber = formData.get('phoneNumber') as string;
     const categoryData = formData.get('category') as string;
     const menuData = formData.get('menu') as string;
 
-    if (!id || !name || !description || !image || isNaN(deliveryFee) || !categoryData) {
+    if (!id || !name || !description || !image || !categoryData) {
         return { message: "Please fill all required fields.", type: 'error' };
     }
 
@@ -235,7 +233,6 @@ export async function updateRestaurant(prevState: any, formData: FormData) {
         name,
         description,
         image,
-        deliveryFee,
         category,
         phoneNumber,
     };
@@ -438,7 +435,6 @@ export async function searchDishes(prevState: any, formData: FormData): Promise<
                             dish,
                             restaurantName: restaurant.name,
                             restaurantId: restaurant.id,
-                            deliveryFee: restaurant.deliveryFee,
                         });
                     }
                 }
@@ -519,4 +515,20 @@ export async function removeParticipant(orderId: string, participantId: string) 
 
     revalidatePath(`/orders/${orderId}`);
     return { message: "Participant removed.", type: "success" };
+}
+
+export async function updateDeliveryFee(formData: FormData) {
+    const orderId = formData.get('orderId') as string;
+    const deliveryFee = parseFloat(formData.get('deliveryFee') as string);
+
+    if (!orderId || isNaN(deliveryFee)) {
+        // Handle error appropriately
+        return;
+    }
+
+    const db = getDb();
+    const orderRef = ref(db, `groupOrders/${orderId}/deliveryFee`);
+    await set(orderRef, deliveryFee);
+
+    revalidatePath(`/orders/${orderId}`);
 }

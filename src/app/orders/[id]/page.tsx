@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import AddToOrderForm from "@/components/order/add-to-order-form";
 import OrderSummary from "@/components/order/order-summary";
 import { Button } from "@/components/ui/button";
-import { Utensils, User, Clock, Pencil, CheckCircle, Info, Copy, Hash, Flame } from "lucide-react";
+import { Utensils, User, Clock, Pencil, CheckCircle, Info, Copy, Hash, Flame, Truck } from "lucide-react";
 import { format } from 'date-fns';
 import FinalizeOrderButton from "@/components/order/finalize-order-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,6 +20,9 @@ import RatingDisplay from "@/components/rating/rating-display";
 import EditParticipantItems from "@/components/order/edit-participant-items";
 import type { Dish } from "@/lib/types";
 import CollatedOrderList from "@/components/order/collated-order-list";
+import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { updateDeliveryFee } from "@/lib/actions";
 
 export default async function OrderPage({ params }: { params: { id: string } }) {
   const order = await getGroupOrderById(params.id);
@@ -136,9 +139,28 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
                 <CardTitle>Order Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                 {isModifiable && (
+                  <form action={updateDeliveryFee} className="space-y-2">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <label htmlFor="deliveryFee" className="flex items-center text-sm font-medium"><Truck className="h-4 w-4 mr-2"/> Set Delivery Fee</label>
+                    <div className="flex gap-2">
+                        <Input 
+                            type="number" 
+                            name="deliveryFee" 
+                            id="deliveryFee"
+                            defaultValue={order.deliveryFee} 
+                            step="0.01"
+                            min="0"
+                            className="text-base"
+                            required
+                        />
+                        <SubmitButton>Set</SubmitButton>
+                    </div>
+                  </form>
+                )}
                 {isModifiable && (
                   <>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground pt-4">
                       Once finalized, no more items can be added, and the order can be archived.
                     </p>
                     <FinalizeOrderButton orderId={order.id} />
