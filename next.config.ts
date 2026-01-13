@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' ,
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
@@ -36,28 +36,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'tse3.mm.bing.net',
+        hostname: 'encrypted-tbn0.gstatic.com',
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'www.bing.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'tse2.mm.bing.net',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.etsystatic.com',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
 };
